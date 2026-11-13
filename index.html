@@ -6,25 +6,18 @@
   <meta name="theme-color" content="#090d16" />
   <meta name="mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <link rel="manifest" href="manifest.json" />
   <title>PsiqueIA — Consultorio & Fogata</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Press+Start+2P&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
-    :root {
-      --app-height: 100dvh;
-    }
-    * {
-      box-sizing: border-box;
-      -webkit-tap-highlight-color: transparent;
-    }
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
     html, body {
       margin: 0;
       padding: 0;
       width: 100%;
-      height: var(--app-height);
+      height: 100%;
       overflow: hidden;
       background-color: #090d16;
       color: #f1f5f9;
@@ -39,509 +32,318 @@
       pointer-events: none;
     }
     .glass-panel {
-      background: rgba(11, 17, 30, 0.78);
+      background: rgba(11, 17, 30, 0.86);
       backdrop-filter: blur(12px);
       -webkit-backdrop-filter: blur(12px);
-      border: 1px solid rgba(255, 255, 255, 0.09);
+      border-color: rgba(255, 255, 255, 0.1);
     }
     .glass-card {
-      background: rgba(15, 23, 42, 0.72);
+      background: rgba(15, 23, 42, 0.78);
       backdrop-filter: blur(10px);
       -webkit-backdrop-filter: blur(10px);
-      border: 1px solid rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.09);
     }
-    .font-pixel {
-      font-family: 'Press Start 2P', monospace;
-    }
-    /* Scrollbar limpio */
     .custom-scroll {
       overflow-y: auto;
       -webkit-overflow-scrolling: touch;
       overscroll-behavior-y: contain;
     }
-    .custom-scroll::-webkit-scrollbar {
-      width: 5px;
-      height: 5px;
-    }
-    .custom-scroll::-webkit-scrollbar-track {
-      background: transparent;
-    }
-    .custom-scroll::-webkit-scrollbar-thumb {
-      background: rgba(148, 163, 184, 0.3);
-      border-radius: 9999px;
-    }
-    /* Evitar zoom automático en iOS/Android al tocar inputs */
-    input, textarea, select {
-      font-size: 16px !important;
-    }
+    input, textarea, select { font-size: 16px !important; }
     @media (min-width: 768px) {
-      input, textarea, select {
-        font-size: 14px !important;
-      }
+      input, textarea, select { font-size: 14px !important; }
     }
   </style>
 </head>
-<body class="flex flex-col">
+<body>
 
   <!-- FONDO MINECRAFT EN TIEMPO REAL -->
   <canvas id="minecraft-canvas"></canvas>
 
-  <!-- CONTENEDOR PRINCIPAL ADAPTABLE AL TECLADO MÓVIL -->
-  <div id="app-shell" class="relative z-10 flex flex-col w-full h-full max-w-6xl mx-auto">
+  <!-- CONTENEDOR PRINCIPAL FIJO AL VIEWPORT VISUAL -->
+  <div id="app-root" class="fixed inset-x-0 top-0 z-10 flex flex-col max-w-5xl mx-auto" style="height: 100dvh;">
 
-    <!-- BARRA SUPERIOR COMPACTA -->
-    <header class="flex-shrink-0 glass-panel px-3 py-2 sm:px-5 sm:py-3 flex items-center justify-between gap-2 border-b border-white/10">
-      <div class="flex items-center gap-2.5 min-w-0">
-        <div class="w-8 h-8 rounded-lg bg-amber-500/20 border border-amber-400/40 flex items-center justify-center flex-shrink-0 text-amber-300 font-bold text-sm">
-          🔥
-        </div>
+    <!-- 1. BARRA SUPERIOR COMPACTA (SIEMPRE VISIBLE, 1 SOLA LÍNEA) -->
+    <header class="flex-shrink-0 glass-panel border-b px-3 py-2 flex items-center justify-between gap-2">
+      <div class="flex items-center gap-2 min-w-0">
+        <span class="w-7 h-7 rounded-lg bg-amber-500/20 border border-amber-400/40 flex items-center justify-center text-sm flex-shrink-0">🔥</span>
         <div class="truncate">
-          <h1 class="text-sm sm:text-base font-bold text-white leading-tight truncate">PsiqueIA</h1>
-          <p id="header-subtitle" class="text-[11px] text-slate-300 truncate">Consultorio Reflexivo • Noche</p>
+          <div class="flex items-center gap-1.5">
+            <h1 class="text-sm font-bold text-white leading-none">PsiqueIA</h1>
+            <span id="badge-topic" class="text-[10px] px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300 truncate max-w-[110px]">General</span>
+          </div>
+          <p id="header-status" class="text-[10px] text-slate-400 truncate mt-0.5">Noche • Despejado</p>
         </div>
       </div>
 
-      <!-- CONTROLES RÁPIDOS DE AMBIENTE Y MENÚ -->
-      <div class="flex items-center gap-1.5 sm:gap-2 flex-shrink-0">
-        <!-- Botón Instalar PWA (aparece si Chrome lo habilita) -->
-        <button id="btn-install-pwa" onclick="triggerInstallPWA()" class="hidden px-2.5 py-1.5 rounded-lg bg-emerald-600/80 hover:bg-emerald-500 text-white text-xs font-medium transition">
-          Instalar App
+      <div class="flex items-center gap-1.5 flex-shrink-0">
+        <!-- Botón Instalar PWA -->
+        <button id="btn-install-pwa" onclick="triggerInstallPWA()" class="hidden px-2 py-1.5 rounded-lg bg-emerald-600 text-white text-[11px] font-semibold">
+          Instalar
         </button>
 
-        <!-- Toggle Día / Noche -->
-        <button id="btn-time" onclick="toggleTimeOfDay()" title="Cambiar Día / Noche" class="px-2.5 py-1.5 rounded-lg glass-card hover:bg-white/10 text-xs font-medium text-amber-200 flex items-center gap-1">
-          <span id="icon-time">🌙</span>
-          <span class="hidden sm:inline" id="label-time">Noche</span>
-        </button>
-
-        <!-- Selector Clima -->
-        <button id="btn-weather" onclick="cycleWeather()" title="Cambiar Clima" class="px-2.5 py-1.5 rounded-lg glass-card hover:bg-white/10 text-xs font-medium text-sky-200 flex items-center gap-1">
-          <span id="icon-weather">✨</span>
-          <span class="hidden sm:inline" id="label-weather">Despejado</span>
-        </button>
-
-        <!-- Toggle Sonido -->
-        <button id="btn-audio" onclick="toggleMasterAudio()" title="Activar / Silenciar Sonido" class="px-2.5 py-1.5 rounded-lg glass-card hover:bg-white/10 text-xs font-medium text-slate-200 flex items-center gap-1">
+        <!-- Toggle Sonido Rápido -->
+        <button onclick="toggleMasterAudio()" id="btn-audio" class="p-2 rounded-lg glass-card text-xs" title="Sonido Fogata/Lluvia">
           <span id="icon-audio">🔇</span>
-          <span class="hidden md:inline" id="label-audio">Audio Off</span>
         </button>
 
-        <!-- Panel Mezclador & Ambiente -->
-        <button onclick="toggleDrawer('ambient-modal')" title="Mezclador de Sonido y Modo Zen" class="p-2 rounded-lg glass-card hover:bg-white/10 text-slate-200 text-xs">
-          🎚️
+        <!-- Desplegar Controles de Sesión / Clima / Firmeza -->
+        <button onclick="toggleSessionControls()" id="btn-toggle-controls" class="px-2.5 py-1.5 rounded-lg bg-indigo-600/80 hover:bg-indigo-500 text-white text-xs font-medium flex items-center gap-1">
+          <span>🎛️</span>
+          <span>Opciones</span>
         </button>
 
-        <!-- Configuración / Respaldo -->
-        <button onclick="openSettings('general')" title="Configuración y Respaldo" class="p-2 rounded-lg glass-card hover:bg-white/10 text-slate-200 text-xs">
+        <!-- Guardar y Analizar Sesión -->
+        <button id="btn-finish-session" onclick="finishAndAnalyzeSession()" class="px-2.5 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold">
+          Guardar
+        </button>
+
+        <!-- Configuración y Sync -->
+        <button onclick="openSettings('general')" class="p-2 rounded-lg glass-card text-xs" title="API Key y Sincronización">
           ⚙️
         </button>
       </div>
     </header>
 
-    <!-- NAVEGACIÓN DE PESTAÑAS (COMPACTA EN MÓVIL) -->
-    <nav id="main-nav" class="flex-shrink-0 glass-panel px-2 py-1.5 flex items-center justify-between gap-1 border-b border-white/10 overflow-x-auto">
-      <div class="flex items-center gap-1">
-        <button onclick="switchTab('chat')" data-tab="chat" class="nav-btn px-3 py-1.5 rounded-lg text-xs font-medium bg-indigo-600 text-white whitespace-nowrap">
-          💬 Consultorio
-        </button>
-        <button onclick="switchTab('sessions')" data-tab="sessions" class="nav-btn px-3 py-1.5 rounded-lg text-xs font-medium text-slate-300 hover:bg-white/10 whitespace-nowrap">
-          🗂️ Sesiones
-        </button>
-        <button onclick="switchTab('record')" data-tab="record" class="nav-btn px-3 py-1.5 rounded-lg text-xs font-medium text-slate-300 hover:bg-white/10 whitespace-nowrap">
-          📋 Expediente
-        </button>
-        <button onclick="switchTab('tools')" data-tab="tools" class="nav-btn px-3 py-1.5 rounded-lg text-xs font-medium text-slate-300 hover:bg-white/10 whitespace-nowrap">
-          🧘 Herramientas
-        </button>
-        <button onclick="switchTab('guide')" data-tab="guide" class="nav-btn px-3 py-1.5 rounded-lg text-xs font-medium text-slate-300 hover:bg-white/10 whitespace-nowrap">
-          📖 Guía
-        </button>
-      </div>
-
-      <button onclick="openSettings('sync')" class="px-2.5 py-1.5 rounded-lg bg-emerald-500/15 border border-emerald-400/30 text-emerald-300 text-xs font-medium whitespace-nowrap hover:bg-emerald-500/25">
-        🔄 Sync
-      </button>
-    </nav>
-
-    <!-- ========================================== -->
-    <!-- VISTA 1: CONSULTORIO (OPTIMIZADA MÓVIL)     -->
-    <!-- ========================================== -->
-    <main id="view-chat" class="flex-1 min-h-0 flex flex-col">
-
-      <!-- BARRA DE APARTADO TEMÁTICO Y ACCIONES DE SESIÓN -->
-      <div class="flex-shrink-0 px-3 py-2 bg-slate-950/60 border-b border-white/10 flex items-center justify-between gap-2">
-        <div class="flex items-center gap-1.5 min-w-0 flex-1">
-          <select id="topic-select" onchange="changeCurrentTopic(this.value)" class="bg-slate-900/90 border border-white/15 text-slate-100 text-xs rounded-lg px-2.5 py-1.5 max-w-[185px] sm:max-w-xs truncate focus:outline-none focus:border-indigo-400">
-          </select>
-          <button onclick="addNewTopicPrompt()" title="Crear nuevo apartado" class="px-2 py-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-xs text-white font-bold flex-shrink-0">
-            +
-          </button>
-        </div>
-
-        <div class="flex items-center gap-1.5 flex-shrink-0">
-          <button onclick="clearCurrentChatOnly()" title="Limpiar chat actual sin guardar" class="px-2.5 py-1.5 rounded-lg bg-rose-500/15 hover:bg-rose-500/25 border border-rose-400/30 text-rose-200 text-xs">
-            🗑️
-          </button>
-          <button id="btn-finish-session" onclick="finishAndAnalyzeSession()" class="px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold shadow-sm">
-            Guardar Sesión
-          </button>
-        </div>
-      </div>
-
-      <!-- ALERTA SI NO HAY API KEY -->
-      <div id="api-warning-banner" class="hidden flex-shrink-0 bg-amber-500/20 border-b border-amber-400/30 px-3 py-2 flex items-center justify-between gap-2 text-xs text-amber-100">
-        <span>⚠️ Configura tu API Key gratuita de Gemini para hablar con el psicólogo.</span>
-        <button onclick="openSettings('general')" class="px-2.5 py-1 rounded bg-amber-500 text-slate-950 font-semibold whitespace-nowrap">
-          Configurar
-        </button>
-      </div>
-
-      <!-- BANNER RECORDATORIO DE RESPALDO POST-SESIÓN -->
-      <div id="backup-reminder-banner" class="hidden flex-shrink-0 bg-indigo-500/20 border-b border-indigo-400/30 px-3 py-2 flex items-center justify-between gap-2 text-xs text-indigo-100">
-        <span>💾 Sesión guardada en este dispositivo. ¿Vas a cambiar de equipo?</span>
+    <!-- 2. PANEL DESPLEGABLE DE CONTROLES (OCULTO POR DEFECTO EN MÓVIL PARA DAR ESPACIO AL CHAT) -->
+    <div id="session-controls-drawer" class="hidden flex-shrink-0 glass-panel border-b px-3 py-3 space-y-2.5 text-xs shadow-xl">
+      <!-- Fila Ambiente -->
+      <div class="flex flex-wrap items-center justify-between gap-2">
         <div class="flex items-center gap-1.5">
-          <button onclick="exportBackupFile()" class="px-2.5 py-1 rounded bg-indigo-500 text-white font-medium whitespace-nowrap">
-            Descargar .json
-          </button>
-          <button onclick="document.getElementById('backup-reminder-banner').classList.add('hidden')" class="px-1.5 py-1 text-slate-300">✕</button>
+          <button onclick="toggleTimeOfDay()" id="btn-time" class="px-2.5 py-1.5 rounded-lg glass-card text-amber-200 font-medium">🌙 Noche</button>
+          <button onclick="cycleWeather()" id="btn-weather" class="px-2.5 py-1.5 rounded-lg glass-card text-sky-200 font-medium">✨ Despejado</button>
+          <button onclick="toggleZenMode()" class="px-2.5 py-1.5 rounded-lg glass-card text-slate-200">🧘 Zen</button>
+        </div>
+        <button onclick="clearCurrentChatOnly()" class="px-2.5 py-1.5 rounded-lg bg-rose-500/20 text-rose-200 border border-rose-400/30">
+          🗑️ Limpiar chat
+        </button>
+      </div>
+
+      <!-- Fila Tema y Enfoque -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+        <div class="flex gap-1.5">
+          <select id="topic-select" onchange="changeCurrentTopic(this.value)" class="flex-1 bg-slate-900 border border-white/15 rounded-lg px-2.5 py-1.5 text-white"></select>
+          <button onclick="addNewTopicPrompt()" class="px-2.5 py-1.5 rounded-lg bg-white/10 text-white font-bold">+</button>
+        </div>
+        <select id="quick-approach" onchange="changeApproachQuick(this.value)" class="bg-slate-900 border border-white/15 rounded-lg px-2.5 py-1.5 text-white">
+          <option value="TCC Analítico">Enfoque: TCC Analítico</option>
+          <option value="Confrontación Socrática">Enfoque: Confrontación Socrática</option>
+          <option value="Escucha Activa">Enfoque: Escucha Activa</option>
+        </select>
+      </div>
+
+      <!-- Fila Firmeza y Volúmenes -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 items-center">
+        <div class="flex items-center gap-2 bg-white/5 px-2.5 py-1.5 rounded-lg">
+          <span class="text-slate-300 whitespace-nowrap">Firmeza: <strong id="quick-conf-label" class="text-amber-300">3/5</strong></span>
+          <input type="range" id="quick-conf-range" min="1" max="5" value="3" oninput="changeConfrontationQuick(this.value)" class="w-full accent-indigo-500" />
+        </div>
+        <div class="flex items-center gap-2 bg-white/5 px-2.5 py-1.5 rounded-lg">
+          <span class="text-slate-300">🔥</span>
+          <input type="range" min="0" max="100" value="70" oninput="setChannelVolume('fire', this.value)" class="w-full accent-amber-500" />
+          <span class="text-slate-300">🌧️</span>
+          <input type="range" min="0" max="100" value="55" oninput="setChannelVolume('rain', this.value)" class="w-full accent-sky-500" />
         </div>
       </div>
 
-      <!-- ÁREA DE MENSAJES CON SCROLL INDEPENDIENTE -->
-      <div id="chat-messages" class="flex-1 min-h-0 custom-scroll px-3 py-4 sm:px-6 space-y-4">
-        <!-- Mensaje de bienvenida / Sugerencias -->
-        <div id="chat-empty-state" class="max-w-lg mx-auto my-4 glass-card rounded-2xl p-4 sm:p-5 text-center space-y-3">
-          <div class="text-2xl">🔥</div>
-          <h2 class="text-base sm:text-lg font-semibold text-white">Junto a la fogata</h2>
-          <p class="text-xs sm:text-sm text-slate-300 leading-relaxed">
-            Este espacio no está diseñado para darte la razón por cortesía, sino para escucharte, detectar sesgos y hacerte las preguntas difíciles.
+      <!-- Check-in rápido de ánimo -->
+      <div class="flex items-center justify-between gap-1 bg-white/5 px-2.5 py-1.5 rounded-lg overflow-x-auto">
+        <span class="text-slate-300 whitespace-nowrap mr-1">Ánimo hoy:</span>
+        <div id="mood-pills" class="flex gap-1"></div>
+      </div>
+    </div>
+
+    <!-- AVISO DE API KEY SI FALTA -->
+    <div id="api-warning-banner" class="hidden flex-shrink-0 bg-amber-500/25 border-b border-amber-400/30 px-3 py-1.5 flex items-center justify-between text-xs text-amber-100">
+      <span>⚠️ Falta tu API Key de Gemini</span>
+      <button onclick="openSettings('general')" class="px-2.5 py-1 rounded bg-amber-500 text-slate-950 font-bold">Pegar Key</button>
+    </div>
+
+    <!-- 3. ÁREA DE CONTENIDO PRINCIPAL (OCUPA TODO EL ESPACIO CENTRAL RESTANTE) -->
+    <main id="view-chat" class="flex-1 min-h-0 flex flex-col">
+      <div id="chat-messages" class="flex-1 min-h-0 custom-scroll px-3 py-3 sm:px-6 space-y-3">
+        <div id="chat-empty-state" class="max-w-md mx-auto my-2 glass-card rounded-2xl p-4 text-center space-y-2.5">
+          <div class="text-xl">🔥</div>
+          <h2 class="text-sm sm:text-base font-semibold text-white">Consultorio Reflexivo</h2>
+          <p class="text-xs text-slate-300 leading-relaxed">
+            Cuéntame lo que pasa. No te daré la razón por cortesía: analizaremos tus ideas con preguntas socráticas y TCC.
           </p>
-          <div class="pt-2 flex flex-wrap justify-center gap-2">
-            <button onclick="useStarterPrompt('Siento que me esfuerzo mucho en todo pero nadie lo valora y me estoy frustrando.')" class="text-left text-xs bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl px-3 py-2 text-slate-200 transition">
-              "Siento que me esfuerzo mucho y nadie lo valora..."
+          <div class="pt-1 flex flex-col gap-1.5">
+            <button onclick="useStarterPrompt('Me siento saturado mentalmente y siento que no avanzo en lo que debería.')" class="text-left text-xs bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl px-3 py-2 text-slate-200">
+              "Me siento saturado mentalmente y siento que no avanzo..."
             </button>
-            <button onclick="useStarterPrompt('Tengo un problema que vengo postergando hace semanas y me pongo excusas.')" class="text-left text-xs bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl px-3 py-2 text-slate-200 transition">
-              "Vengo postergando algo importante y me pongo excusas..."
+            <button onclick="useStarterPrompt('Le doy muchas vueltas a algo que pasó y no sé si estoy exagerando.')" class="text-left text-xs bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl px-3 py-2 text-slate-200">
+              "Le doy muchas vueltas a algo que pasó..."
             </button>
-            <button onclick="useStarterPrompt('Quiero revisar cómo voy respecto a nuestra última sesión.')" class="text-left text-xs bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl px-3 py-2 text-slate-200 transition">
-              "Revisar mi progreso desde la última sesión"
+            <button onclick="useStarterPrompt('Revisemos los acuerdos y tareas de mi sesión anterior.')" class="text-left text-xs bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl px-3 py-2 text-slate-200">
+              "Revisar acuerdos de mi sesión anterior..."
             </button>
           </div>
         </div>
       </div>
 
-      <!-- CAJA DE ESCRITURA SIEMPRE VISIBLE Y ANCLADA ABAJO -->
-      <div id="chat-input-bar" class="flex-shrink-0 glass-panel px-2.5 py-2 sm:px-4 sm:py-3 border-t border-white/15">
-        <div class="max-w-4xl mx-auto flex items-end gap-2">
-          <button id="btn-mic" onclick="toggleVoiceInput()" title="Dictar por voz" class="flex-shrink-0 w-10 h-10 rounded-xl bg-white/10 hover:bg-white/20 flex items-center justify-center text-slate-200 transition">
-            🎙️
-          </button>
-
-          <div class="flex-1 min-w-0 bg-slate-900/95 border border-white/15 focus-within:border-indigo-400 rounded-xl px-3 py-2">
-            <textarea
-              id="user-input"
-              rows="1"
-              placeholder="Escribe lo que piensas con total honestidad..."
-              oninput="autoResizeTextarea(this)"
-              onfocus="scrollChatToBottom(true)"
-              onkeydown="handleInputKeydown(event)"
-              class="w-full bg-transparent text-slate-100 placeholder-slate-400 resize-none focus:outline-none max-h-28 leading-snug"
-            ></textarea>
-          </div>
-
-          <button id="btn-send" onclick="sendMessage()" class="flex-shrink-0 h-10 px-4 rounded-xl bg-indigo-600 hover:bg-indigo-500 active:scale-95 text-white font-semibold text-sm flex items-center justify-center transition">
-            Enviar
-          </button>
+      <!-- CAJA DE ESCRITURA SIEMPRE ANCLADA Y VISIBLE -->
+      <div id="chat-input-bar" class="flex-shrink-0 glass-panel border-t px-2.5 py-2 flex items-end gap-2">
+        <button id="btn-mic" onclick="toggleVoiceInput()" class="flex-shrink-0 w-10 h-10 rounded-xl bg-white/10 active:bg-rose-600 flex items-center justify-center text-base">
+          🎙️
+        </button>
+        <div class="flex-1 min-w-0 bg-slate-900 border border-white/20 focus-within:border-indigo-400 rounded-xl px-3 py-2">
+          <textarea
+            id="user-input"
+            rows="1"
+            placeholder="Escribe aquí..."
+            oninput="autoResizeTextarea(this)"
+            onfocus="scrollChatToBottom(true)"
+            class="w-full bg-transparent text-white placeholder-slate-400 resize-none focus:outline-none max-h-24 leading-snug"
+          ></textarea>
         </div>
+        <button id="btn-send" onclick="sendMessage()" class="flex-shrink-0 h-10 px-4 rounded-xl bg-indigo-600 active:bg-indigo-500 text-white font-semibold text-xs sm:text-sm">
+          Enviar
+        </button>
       </div>
     </main>
 
-    <!-- ========================================== -->
-    <!-- VISTA 2: SESIONES E HISTORIAL              -->
-    <!-- ========================================== -->
-    <section id="view-sessions" class="hidden flex-1 min-h-0 custom-scroll p-4 sm:p-6 space-y-4">
-      <div class="glass-card rounded-2xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-        <div>
-          <h2 class="text-lg font-bold text-white">Historial de Sesiones</h2>
-          <p class="text-xs text-slate-300">Consulta transcripciones pasadas o elimina conversaciones específicas.</p>
-        </div>
-        <div class="flex flex-wrap gap-2">
-          <select id="filter-session-topic" onchange="renderSessionsList()" class="bg-slate-900 border border-white/15 rounded-lg px-3 py-1.5 text-xs text-slate-200">
-            <option value="ALL">Todos los apartados</option>
-          </select>
-          <button onclick="deleteFilteredSessions()" class="px-3 py-1.5 rounded-lg bg-rose-600/80 hover:bg-rose-500 text-white text-xs font-medium">
-            Borrar filtradas
-          </button>
-        </div>
+    <!-- OTRAS VISTAS (SESIONES, EXPEDIENTE, TCC, GUÍA) -->
+    <section id="view-sessions" class="hidden flex-1 min-h-0 custom-scroll p-3 sm:p-5 space-y-3">
+      <div class="glass-card rounded-xl p-3 flex items-center justify-between gap-2">
+        <select id="filter-session-topic" onchange="renderSessionsList()" class="bg-slate-900 border border-white/15 rounded-lg px-2.5 py-1.5 text-xs text-white flex-1"></select>
+        <button onclick="deleteFilteredSessions()" class="px-3 py-1.5 rounded-lg bg-rose-600/80 text-white text-xs font-medium">Borrar estas</button>
       </div>
-
-      <div id="sessions-list-container" class="space-y-3"></div>
+      <div id="sessions-list-container" class="space-y-2.5"></div>
     </section>
 
-    <!-- ========================================== -->
-    <!-- VISTA 3: EXPEDIENTE CLÍNICO Y ANALÍTICA    -->
-    <!-- ========================================== -->
-    <section id="view-record" class="hidden flex-1 min-h-0 custom-scroll p-4 sm:p-6 space-y-4">
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
-        <div class="glass-card rounded-2xl p-4">
-          <span class="text-xs text-slate-400">Sesiones Analizadas</span>
-          <div id="stat-sessions" class="text-2xl font-bold text-white mt-1">0</div>
+    <section id="view-record" class="hidden flex-1 min-h-0 custom-scroll p-3 sm:p-5 space-y-3">
+      <div class="grid grid-cols-2 gap-2">
+        <div class="glass-card rounded-xl p-3">
+          <div class="text-[11px] text-slate-400">Sesiones Guardadas</div>
+          <div id="stat-sessions" class="text-xl font-bold text-white">0</div>
         </div>
-        <div class="glass-card rounded-2xl p-4">
-          <span class="text-xs text-slate-400">Enfoque Activo</span>
-          <div id="stat-approach" class="text-lg font-semibold text-indigo-300 mt-1">TCC Analítico</div>
-        </div>
-        <div class="glass-card rounded-2xl p-4">
-          <span class="text-xs text-slate-400">Nivel de Confrontación</span>
-          <div id="stat-confrontation" class="text-2xl font-bold text-amber-300 mt-1">3 / 5</div>
+        <div class="glass-card rounded-xl p-3">
+          <div class="text-[11px] text-slate-400">Firmeza Actual</div>
+          <div id="stat-confrontation" class="text-xl font-bold text-amber-300">3 / 5</div>
         </div>
       </div>
-
-      <div class="glass-card rounded-2xl p-4 space-y-2">
-        <div class="flex items-center justify-between">
-          <h3 class="text-sm font-bold text-white">Resumen Evolutivo</h3>
-          <button onclick="recalculateRecordFromHistory()" class="text-xs text-indigo-300 hover:underline">Recalcular desde historial</button>
-        </div>
-        <p id="record-summary" class="text-xs sm:text-sm text-slate-300 leading-relaxed">Aún no hay sesiones guardadas para generar un análisis evolutivo.</p>
+      <div class="glass-card rounded-xl p-3.5 space-y-1.5">
+        <h3 class="text-xs font-bold text-indigo-300 uppercase">Resumen Evolutivo</h3>
+        <p id="record-summary" class="text-xs text-slate-200 leading-relaxed"></p>
       </div>
-
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div class="glass-card rounded-2xl p-4 space-y-2">
-          <h3 class="text-sm font-bold text-amber-300">Patrones y Distorsiones Detectadas</h3>
-          <div id="record-distortions" class="flex flex-wrap gap-1.5 text-xs"></div>
-        </div>
-        <div class="glass-card rounded-2xl p-4 space-y-2">
-          <h3 class="text-sm font-bold text-sky-300">Temas Recurrentes</h3>
-          <div id="record-themes" class="flex flex-wrap gap-1.5 text-xs"></div>
-        </div>
+      <div class="glass-card rounded-xl p-3.5 space-y-2">
+        <h3 class="text-xs font-bold text-amber-300 uppercase">Sesgos Detectados</h3>
+        <div id="record-distortions" class="flex flex-wrap gap-1.5 text-xs"></div>
       </div>
-
-      <div class="glass-card rounded-2xl p-4 space-y-3">
-        <h3 class="text-sm font-bold text-emerald-300">Acuerdos y Tareas Entre Sesiones</h3>
-        <div id="record-tasks" class="space-y-2 text-xs sm:text-sm"></div>
+      <div class="glass-card rounded-xl p-3.5 space-y-2">
+        <h3 class="text-xs font-bold text-emerald-300 uppercase">Tareas y Acuerdos</h3>
+        <div id="record-tasks" class="space-y-1.5 text-xs"></div>
       </div>
-
-      <div class="glass-card rounded-2xl p-4">
-        <h3 class="text-sm font-bold text-white mb-3">Evolución de Ánimo por Sesión</h3>
-        <div class="h-48">
-          <canvas id="mood-chart"></canvas>
-        </div>
+      <div class="glass-card rounded-xl p-3.5">
+        <h3 class="text-xs font-bold text-white mb-2">Gráfica de Ánimo</h3>
+        <div class="h-40"><canvas id="mood-chart"></canvas></div>
       </div>
     </section>
 
-    <!-- ========================================== -->
-    <!-- VISTA 4: HERRAMIENTAS DE REGULACIÓN        -->
-    <!-- ========================================== -->
-    <section id="view-tools" class="hidden flex-1 min-h-0 custom-scroll p-4 sm:p-6 space-y-4">
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <!-- Respiración 4-4-4-4 -->
-        <div class="glass-card rounded-2xl p-5 flex flex-col items-center text-center space-y-4">
-          <h3 class="text-base font-bold text-white">Respiración Cuadrada (4-4-4-4)</h3>
-          <p class="text-xs text-slate-300">Regula el sistema nervioso antes o después de una conversación intensa.</p>
-          <div id="breathing-circle" class="w-28 h-28 rounded-full bg-indigo-500/20 border-2 border-indigo-400 flex items-center justify-center text-sm font-semibold text-indigo-200 transition-all duration-1000">
-            Listo
-          </div>
-          <button id="btn-breathing" onclick="toggleBreathingExercise()" class="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold">
-            Iniciar Ciclo
-          </button>
-        </div>
-
-        <!-- Registro rápido de pensamiento TCC -->
-        <div class="glass-card rounded-2xl p-5 space-y-3">
-          <h3 class="text-base font-bold text-white">Bitácora de Pensamiento Automático</h3>
-          <p class="text-xs text-slate-300">Anota un detonante; el terapeuta lo leerá en tu próxima sesión.</p>
-          <input id="cbt-situation" type="text" placeholder="1. ¿Qué pasó? (Situación)" class="w-full bg-slate-900/90 border border-white/15 rounded-lg px-3 py-2 text-xs text-white" />
-          <input id="cbt-thought" type="text" placeholder="2. ¿Qué pensaste automáticamente?" class="w-full bg-slate-900/90 border border-white/15 rounded-lg px-3 py-2 text-xs text-white" />
-          <input id="cbt-rational" type="text" placeholder="3. ¿Cuál es una interpretación más realista?" class="w-full bg-slate-900/90 border border-white/15 rounded-lg px-3 py-2 text-xs text-white" />
-          <button onclick="saveCbtLog()" class="w-full py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold">
-            Guardar en Bitácora
-          </button>
-          <div id="cbt-logs-list" class="space-y-1.5 pt-2 max-h-36 overflow-y-auto text-xs"></div>
-        </div>
+    <section id="view-tools" class="hidden flex-1 min-h-0 custom-scroll p-3 sm:p-5 space-y-3">
+      <div class="glass-card rounded-xl p-4 text-center space-y-3">
+        <h3 class="text-sm font-bold text-white">Respiración 4-4-4-4</h3>
+        <div id="breathing-circle" class="w-24 h-24 mx-auto rounded-full bg-indigo-500/20 border-2 border-indigo-400 flex items-center justify-center text-xs font-semibold text-indigo-200 transition-all duration-1000">Listo</div>
+        <button id="btn-breathing" onclick="toggleBreathingExercise()" class="px-4 py-2 rounded-xl bg-indigo-600 text-white text-xs font-semibold">Iniciar</button>
+      </div>
+      <div class="glass-card rounded-xl p-4 space-y-2.5">
+        <h3 class="text-sm font-bold text-white">Registro Rápido TCC</h3>
+        <input id="cbt-situation" type="text" placeholder="1. Situación detonante" class="w-full bg-slate-900 border border-white/15 rounded-lg px-3 py-2 text-xs text-white" />
+        <input id="cbt-thought" type="text" placeholder="2. Pensamiento automático" class="w-full bg-slate-900 border border-white/15 rounded-lg px-3 py-2 text-xs text-white" />
+        <input id="cbt-rational" type="text" placeholder="3. Respuesta realista" class="w-full bg-slate-900 border border-white/15 rounded-lg px-3 py-2 text-xs text-white" />
+        <button onclick="saveCbtLog()" class="w-full py-2 rounded-xl bg-emerald-600 text-white text-xs font-semibold">Guardar en Bitácora</button>
+        <div id="cbt-logs-list" class="space-y-1.5 text-xs"></div>
       </div>
     </section>
 
-    <!-- ========================================== -->
-    <!-- VISTA 5: GUÍA DE FUNCIONAMIENTO            -->
-    <!-- ========================================== -->
-    <section id="view-guide" class="hidden flex-1 min-h-0 custom-scroll p-4 sm:p-6 space-y-4">
-      <div class="glass-card rounded-2xl p-5 space-y-4">
-        <h2 class="text-lg font-bold text-white">Cómo funciona PsiqueIA</h2>
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs">
-          <div class="bg-white/5 rounded-xl p-3.5 space-y-1">
-            <div class="font-bold text-amber-300">1. Sin complacencia</div>
-            <p class="text-slate-300">A diferencia de un chat genérico, está instruido con Terapia Cognitivo-Conductual para cuestionar excusas y detectar sesgos.</p>
-          </div>
-          <div class="bg-white/5 rounded-xl p-3.5 space-y-1">
-            <div class="font-bold text-emerald-300">2. Expediente Evolutivo</div>
-            <p class="text-slate-300">Al presionar <strong>Guardar Sesión</strong>, analiza toda la plática y actualiza tus patrones, temas y tareas pendientes.</p>
-          </div>
-          <div class="bg-white/5 rounded-xl p-3.5 space-y-1">
-            <div class="font-bold text-sky-300">3. Sincronización PC ↔ Móvil</div>
-            <p class="text-slate-300">Todo vive localmente por privacidad. Usa la pestaña <strong>Sync</strong> para pasar tu progreso entre dispositivos en segundos.</p>
-          </div>
-        </div>
-      </div>
-    </section>
+    <!-- 4. BARRA DE NAVEGACIÓN INFERIOR ULTRA-DELGADA -->
+    <nav id="bottom-nav" class="flex-shrink-0 glass-panel border-t px-1 py-1 grid grid-cols-5 gap-1 text-center">
+      <button onclick="switchTab('chat')" data-tab="chat" class="nav-btn py-1 rounded-lg bg-indigo-600 text-white text-[11px] font-medium">💬 Chat</button>
+      <button onclick="switchTab('sessions')" data-tab="sessions" class="nav-btn py-1 rounded-lg text-slate-300 text-[11px]">🗂️ Sesiones</button>
+      <button onclick="switchTab('record')" data-tab="record" class="nav-btn py-1 rounded-lg text-slate-300 text-[11px]">📋 Expediente</button>
+      <button onclick="switchTab('tools')" data-tab="tools" class="nav-btn py-1 rounded-lg text-slate-300 text-[11px]">🧘 TCC</button>
+      <button onclick="openSettings('sync')" class="py-1 rounded-lg text-emerald-300 text-[11px] font-medium">🔄 Sync</button>
+    </nav>
 
-    <!-- BOTÓN FLOTANTE PARA SALIR DEL MODO ZEN -->
-    <button id="btn-exit-zen" onclick="toggleZenMode()" class="hidden fixed bottom-5 right-5 z-50 px-4 py-2 rounded-full glass-panel text-xs text-amber-200 font-semibold shadow-lg">
-      Volver al Consultorio
+    <!-- BOTÓN SALIR MODO ZEN -->
+    <button id="btn-exit-zen" onclick="toggleZenMode()" class="hidden fixed bottom-5 right-5 z-50 px-4 py-2 rounded-full glass-panel text-xs text-amber-200 font-semibold border">
+      Volver al Chat
     </button>
   </div>
 
-  <!-- ========================================== -->
-  <!-- MODAL MEZCLADOR DE AMBIENTE Y MODO ZEN     -->
-  <!-- ========================================== -->
-  <div id="ambient-modal" class="hidden fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4">
-    <div class="glass-panel w-full sm:max-w-md rounded-t-2xl sm:rounded-2xl p-5 space-y-4">
-      <div class="flex items-center justify-between">
-        <h3 class="text-base font-bold text-white">Ambiente Minecraft & Audio</h3>
-        <button onclick="toggleDrawer('ambient-modal')" class="text-slate-400 hover:text-white text-lg">✕</button>
-      </div>
-
-      <div class="space-y-3 text-xs">
-        <div>
-          <div class="flex justify-between text-slate-300 mb-1">
-            <span>🔥 Chisporroteo de Fogata</span>
-            <span id="val-fire">70%</span>
-          </div>
-          <input type="range" min="0" max="100" value="70" oninput="setChannelVolume('fire', this.value)" class="w-full accent-amber-500" />
+  <!-- MODAL CONFIGURACIÓN Y SINCRONIZACIÓN -->
+  <div id="settings-modal" class="hidden fixed inset-0 z-50 bg-black/80 flex items-end sm:items-center justify-center">
+    <div class="glass-panel w-full sm:max-w-md max-h-[88dvh] flex flex-col rounded-t-2xl sm:rounded-2xl border overflow-hidden">
+      <div class="p-3.5 border-b border-white/10 flex items-center justify-between">
+        <div class="flex gap-1.5">
+          <button onclick="switchSettingsTab('general')" id="stab-general" class="px-3 py-1 rounded-lg bg-indigo-600 text-white text-xs font-semibold">API Key</button>
+          <button onclick="switchSettingsTab('sync')" id="stab-sync" class="px-3 py-1 rounded-lg bg-white/10 text-slate-300 text-xs font-semibold">Respaldo / Sync</button>
         </div>
-
-        <div>
-          <div class="flex justify-between text-slate-300 mb-1">
-            <span>🌧️ Lluvia Relajante</span>
-            <span id="val-rain">55%</span>
-          </div>
-          <input type="range" min="0" max="100" value="55" oninput="setChannelVolume('rain', this.value)" class="w-full accent-sky-500" />
-        </div>
-
-        <div>
-          <div class="flex justify-between text-slate-300 mb-1">
-            <span>🦗 Noche / Viento Suave</span>
-            <span id="val-night">40%</span>
-          </div>
-          <input type="range" min="0" max="100" value="40" oninput="setChannelVolume('night', this.value)" class="w-full accent-indigo-500" />
-        </div>
+        <button onclick="closeSettings()" class="text-slate-300 px-2 text-base">✕</button>
       </div>
-
-      <div class="pt-2 flex gap-2">
-        <button onclick="toggleDrawer('ambient-modal'); toggleZenMode();" class="flex-1 py-2.5 rounded-xl bg-amber-500/20 border border-amber-400/40 text-amber-200 text-xs font-semibold">
-          🧘 Modo Zen (Solo Fogata)
-        </button>
-        <button onclick="toggleDrawer('ambient-modal')" class="px-4 py-2.5 rounded-xl bg-white/10 text-white text-xs">
-          Listo
-        </button>
-      </div>
-    </div>
-  </div>
-
-  <!-- ========================================== -->
-  <!-- MODAL CONFIGURACIÓN Y RESPALDO / SYNC      -->
-  <!-- ========================================== -->
-  <div id="settings-modal" class="hidden fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4">
-    <div class="glass-panel w-full sm:max-w-lg max-h-[90dvh] flex flex-col rounded-t-2xl sm:rounded-2xl overflow-hidden">
-      <div class="p-4 border-b border-white/10 flex items-center justify-between">
-        <div class="flex gap-2">
-          <button onclick="switchSettingsTab('general')" id="stab-general" class="px-3 py-1 rounded-lg bg-indigo-600 text-white text-xs font-semibold">Terapia & API</button>
-          <button onclick="switchSettingsTab('sync')" id="stab-sync" class="px-3 py-1 rounded-lg bg-white/10 text-slate-300 text-xs font-semibold">Sincronizar / Respaldo</button>
-        </div>
-        <button onclick="closeSettings()" class="text-slate-400 hover:text-white text-lg">✕</button>
-      </div>
-
-      <div class="p-4 custom-scroll space-y-4 text-xs">
-        <!-- SUBPESTAÑA GENERAL -->
+      <div class="p-4 custom-scroll space-y-3 text-xs">
         <div id="settings-pane-general" class="space-y-3">
           <div>
-            <label class="block text-slate-300 mb-1 font-medium">API Key de Google Gemini (Gratuita en AI Studio)</label>
+            <label class="block text-slate-300 mb-1">API Key de Google Gemini</label>
             <input id="cfg-api-key" type="password" placeholder="AIzaSy..." class="w-full bg-slate-900 border border-white/15 rounded-lg px-3 py-2 text-white" />
           </div>
-
-          <div>
-            <label class="block text-slate-300 mb-1 font-medium">Enfoque Terapéutico</label>
-            <select id="cfg-approach" class="w-full bg-slate-900 border border-white/15 rounded-lg px-3 py-2 text-white">
-              <option value="TCC Analítico">TCC Analítico (Cuestiona sesgos y busca soluciones)</option>
-              <option value="Confrontación Socrática">Confrontación Socrática (Directo, sin filtros ni excusas)</option>
-              <option value="Escucha Activa">Escucha Activa (Contención empática y reflexión suave)</option>
-            </select>
-          </div>
-
-          <div>
-            <div class="flex justify-between text-slate-300 mb-1 font-medium">
-              <span>Nivel de Confrontación</span>
-              <span id="cfg-conf-val" class="text-amber-300 font-bold">3 / 5</span>
-            </div>
-            <input id="cfg-confrontation" type="range" min="1" max="5" value="3" oninput="document.getElementById('cfg-conf-val').textContent = this.value + ' / 5'" class="w-full accent-indigo-500" />
-          </div>
-
-          <button onclick="saveGeneralSettings()" class="w-full py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-semibold">
-            Guardar Configuración
-          </button>
+          <button onclick="saveGeneralSettings()" class="w-full py-2.5 rounded-xl bg-indigo-600 text-white font-semibold">Guardar API Key</button>
         </div>
-
-        <!-- SUBPESTAÑA SINCRONIZAR / RESPALDO -->
-        <div id="settings-pane-sync" class="hidden space-y-4">
-          <div class="bg-emerald-500/10 border border-emerald-400/25 rounded-xl p-3 text-emerald-100 space-y-1">
-            <div class="font-bold">Mover progreso entre PC y Celular</div>
-            <p class="text-[11px] text-emerald-200/80">Exporta tu expediente y conversaciones en un archivo o cópialo como texto para enviártelo por WhatsApp.</p>
-          </div>
-
-          <label class="flex items-center gap-2 text-slate-200">
-            <input id="sync-include-key" type="checkbox" checked class="accent-indigo-500" />
-            <span>Incluir mi API Key de Gemini en el respaldo</span>
-          </label>
-
+        <div id="settings-pane-sync" class="hidden space-y-3">
+          <p class="text-slate-300 text-[11px]">Exporta tu expediente y conversaciones para pasarlas entre tu PC y tu celular.</p>
           <div class="grid grid-cols-2 gap-2">
-            <button onclick="exportBackupFile()" class="py-2.5 px-3 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-semibold">
-              ⬇️ Descargar .json
-            </button>
-            <label class="py-2.5 px-3 rounded-xl bg-white/10 hover:bg-white/20 text-white font-semibold text-center cursor-pointer">
-              ⬆️ Cargar .json
+            <button onclick="exportBackupFile()" class="py-2 rounded-xl bg-indigo-600 text-white font-semibold">⬇️ Bajar .json</button>
+            <label class="py-2 rounded-xl bg-white/10 text-white font-semibold text-center cursor-pointer">
+              ⬆️ Subir .json
               <input type="file" accept=".json" onchange="importBackupFile(event)" class="hidden" />
             </label>
           </div>
-
-          <div class="space-y-2 pt-2 border-t border-white/10">
-            <div class="font-semibold text-slate-200">Transferencia rápida por WhatsApp / Portapapeles</div>
-            <button onclick="copyBackupCode()" class="w-full py-2 rounded-xl bg-emerald-600/80 hover:bg-emerald-500 text-white font-semibold">
-              📋 Copiar código de respaldo al portapapeles
-            </button>
-            <textarea id="paste-backup-code" rows="3" placeholder="Pega aquí el código PSIQUE_BACKUP_... recibido en este dispositivo" class="w-full bg-slate-900 border border-white/15 rounded-lg p-2 text-white text-xs"></textarea>
-            <button onclick="restoreFromBackupCode()" class="w-full py-2 rounded-xl bg-white/10 hover:bg-white/20 text-white font-semibold">
-              Restaurar desde texto pegado
-            </button>
-          </div>
+          <button onclick="copyBackupCode()" class="w-full py-2 rounded-xl bg-emerald-600 text-white font-semibold">📋 Copiar código para WhatsApp</button>
+          <textarea id="paste-backup-code" rows="2" placeholder="Pega aquí código PSIQUE_BACKUP_..." class="w-full bg-slate-900 border border-white/15 rounded-lg p-2 text-white"></textarea>
+          <button onclick="restoreFromBackupCode()" class="w-full py-2 rounded-xl bg-white/15 text-white font-semibold">Restaurar desde texto</button>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- ========================================== -->
-  <!-- MODAL VER TRANSCRIPCIÓN DE SESIÓN          -->
-  <!-- ========================================== -->
-  <div id="transcript-modal" class="hidden fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4">
-    <div class="glass-panel w-full sm:max-w-2xl max-h-[88dvh] flex flex-col rounded-t-2xl sm:rounded-2xl overflow-hidden">
-      <div class="p-4 border-b border-white/10 flex items-center justify-between">
-        <div>
-          <h3 id="modal-session-title" class="text-sm font-bold text-white">Detalle de Sesión</h3>
-          <p id="modal-session-meta" class="text-[11px] text-slate-400"></p>
-        </div>
-        <button onclick="document.getElementById('transcript-modal').classList.add('hidden')" class="text-slate-400 hover:text-white text-lg">✕</button>
+  <!-- MODAL VER TRANSCRIPCIÓN -->
+  <div id="transcript-modal" class="hidden fixed inset-0 z-50 bg-black/80 flex items-end sm:items-center justify-center">
+    <div class="glass-panel w-full sm:max-w-lg max-h-[85dvh] flex flex-col rounded-t-2xl sm:rounded-2xl border overflow-hidden">
+      <div class="p-3.5 border-b border-white/10 flex items-center justify-between">
+        <h3 id="modal-session-title" class="text-xs font-bold text-white">Sesión</h3>
+        <button onclick="document.getElementById('transcript-modal').classList.add('hidden')" class="text-slate-300 px-2">✕</button>
       </div>
-      <div id="modal-session-body" class="p-4 custom-scroll space-y-3 text-xs sm:text-sm"></div>
+      <div id="modal-session-body" class="p-3.5 custom-scroll space-y-2.5 text-xs"></div>
     </div>
   </div>
 
   <script>
     // ==========================================
-    // 1. REGISTRO PWA Y AJUSTE DINÁMICO DE TECLADO MÓVIL
+    // AJUSTE REAL DE ALTURA EN MÓVIL (TECLADO VIRTUAL)
+    // ==========================================
+    function adjustAppHeight() {
+      const root = document.getElementById('app-root');
+      const vv = window.visualViewport;
+      if (vv) {
+        root.style.height = vv.height + 'px';
+        root.style.top = vv.offsetTop + 'px';
+      } else {
+        root.style.height = window.innerHeight + 'px';
+      }
+      scrollChatToBottom(false);
+    }
+    if (window.visualViewport) {
+      window.visualViewport.addEventListener('resize', adjustAppHeight);
+      window.visualViewport.addEventListener('scroll', adjustAppHeight);
+    }
+    window.addEventListener('resize', adjustAppHeight);
+
+    // ==========================================
+    // PWA INSTALL
     // ==========================================
     let deferredPrompt = null;
     if ('serviceWorker' in navigator) {
-      window.addEventListener('load', () => {
-        navigator.serviceWorker.register('./sw.js').catch(() => {});
-      });
+      window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js').catch(() => {}));
     }
     window.addEventListener('beforeinstallprompt', (e) => {
       e.preventDefault();
@@ -556,1056 +358,517 @@
       document.getElementById('btn-install-pwa').classList.add('hidden');
     }
 
-    // Ajuste exacto de altura cuando se despliega el teclado virtual en Android/iOS
-    function syncViewportHeight() {
-      const vh = window.visualViewport ? window.visualViewport.height : window.innerHeight;
-      document.documentElement.style.setProperty('--app-height', `${vh}px`);
-      scrollChatToBottom(false);
-    }
-    if (window.visualViewport) {
-      window.visualViewport.addEventListener('resize', syncViewportHeight);
-      window.visualViewport.addEventListener('scroll', syncViewportHeight);
-    }
-    window.addEventListener('resize', syncViewportHeight);
-
     // ==========================================
-    // 2. ESTADO PERSISTENTE DE LA APLICACIÓN
+    // ESTADO Y PERSISTENCIA
     // ==========================================
-    const STORAGE_KEY = 'psique_ia_state_v3';
+    const STORAGE_KEY = 'psique_ia_v4';
     const DEFAULT_STATE = {
       apiKey: '',
       approach: 'TCC Analítico',
       confrontation: 3,
-      topics: ['General / Desahogo', 'Trabajo y Carrera', 'Relaciones y Familia', 'Ansiedad y Estrés', 'Hábitos y Disciplina'],
+      currentMood: 5,
+      topics: ['General / Desahogo', 'Trabajo y Carrera', 'Relaciones y Familia', 'Ansiedad y Estrés', 'Hábitos'],
       currentTopic: 'General / Desahogo',
       currentChat: [],
       sessions: [],
       cbtLogs: [],
-      record: {
-        totalSessions: 0,
-        summary: 'Aún no hay sesiones guardadas para generar un análisis evolutivo.',
-        distortions: [],
-        themes: [],
-        tasks: []
-      },
-      env: {
-        isNight: true,
-        weather: 'clear' // clear | rain | storm
-      }
+      record: { totalSessions: 0, summary: 'Aún sin sesiones guardadas.', distortions: [], themes: [], tasks: [] },
+      env: { isNight: true, weather: 'clear' }
     };
 
-    let state = loadState();
-    let isSending = false;
-    let moodChartInstance = null;
-
-    function loadState() {
+    let state = (() => {
       try {
-        const raw = localStorage.getItem(STORAGE_KEY);
+        const raw = localStorage.getItem(STORAGE_KEY) || localStorage.getItem('psique_ia_state_v3');
         if (!raw) return structuredClone(DEFAULT_STATE);
-        const parsed = JSON.parse(raw);
-        return {
-          ...structuredClone(DEFAULT_STATE),
-          ...parsed,
-          record: { ...DEFAULT_STATE.record, ...(parsed.record || {}) },
-          env: { ...DEFAULT_STATE.env, ...(parsed.env || {}) }
-        };
-      } catch {
-        return structuredClone(DEFAULT_STATE);
-      }
-    }
+        const p = JSON.parse(raw);
+        return { ...structuredClone(DEFAULT_STATE), ...p, record: { ...DEFAULT_STATE.record, ...(p.record || {}) }, env: { ...DEFAULT_STATE.env, ...(p.env || {}) } };
+      } catch { return structuredClone(DEFAULT_STATE); }
+    })();
 
-    function saveState() {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-    }
+    function saveState() { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
 
     // ==========================================
-    // 3. ESCENARIO VIVO MINECRAFT (CANVAS 2D)
+    // ESCENARIO MINECRAFT (CANVAS)
     // ==========================================
     const canvas = document.getElementById('minecraft-canvas');
     const ctx = canvas.getContext('2d');
     let W = 0, H = 0;
-
-    const stars = Array.from({ length: 75 }, () => ({
-      x: Math.random(),
-      y: Math.random() * 0.55,
-      size: Math.random() > 0.7 ? 3 : 2,
-      phase: Math.random() * Math.PI * 2
-    }));
-
-    const fireflies = Array.from({ length: 22 }, () => ({
-      x: Math.random(),
-      y: 0.45 + Math.random() * 0.4,
-      vx: (Math.random() - 0.5) * 0.0006,
-      vy: (Math.random() - 0.5) * 0.0004,
-      phase: Math.random() * Math.PI * 2
-    }));
-
+    const stars = Array.from({ length: 65 }, () => ({ x: Math.random(), y: Math.random() * 0.5, s: Math.random() > 0.7 ? 3 : 2, p: Math.random() * 6 }));
     const embers = [];
-    const smoke = [];
-    const raindrops = Array.from({ length: 140 }, () => ({
-      x: Math.random(),
-      y: Math.random(),
-      speed: 0.014 + Math.random() * 0.012,
-      len: 10 + Math.random() * 10
-    }));
-    let lightningAlpha = 0;
+    const raindrops = Array.from({ length: 120 }, () => ({ x: Math.random(), y: Math.random(), sp: 0.015 + Math.random() * 0.01, l: 12 }));
+    let lightning = 0;
 
-    function resizeCanvas() {
-      W = canvas.width = window.innerWidth;
-      H = canvas.height = window.innerHeight;
-    }
+    function resizeCanvas() { W = canvas.width = window.innerWidth; H = canvas.height = window.innerHeight; }
     window.addEventListener('resize', resizeCanvas);
     resizeCanvas();
 
-    function drawPixelTree(tx, groundY, scale) {
-      const s = Math.max(12, Math.floor(18 * scale));
-      // Tronco
-      ctx.fillStyle = state.env.isNight ? '#2b1d12' : '#4a321f';
-      ctx.fillRect(tx - s * 0.5, groundY - s * 4, s, s * 4);
-      // Copa voxel
-      ctx.fillStyle = state.env.isNight ? '#0f291e' : '#1e5631';
-      ctx.fillRect(tx - s * 2.5, groundY - s * 6, s * 5, s * 2.5);
-      ctx.fillStyle = state.env.isNight ? '#143627' : '#286e3f';
-      ctx.fillRect(tx - s * 1.8, groundY - s * 7.8, s * 3.6, s * 2);
-      ctx.fillRect(tx - s * 1, groundY - s * 9, s * 2, s * 1.3);
-    }
-
-    function renderMinecraftScene(time) {
+    function renderScene(time) {
       const t = time * 0.001;
-      const isNight = state.env.isNight;
-      const weather = state.env.weather;
+      const night = state.env.isNight;
+      const w = state.env.weather;
 
-      // Cielo
-      const skyGrad = ctx.createLinearGradient(0, 0, 0, H * 0.8);
-      if (isNight) {
-        skyGrad.addColorStop(0, weather === 'clear' ? '#060913' : '#090d16');
-        skyGrad.addColorStop(1, weather === 'clear' ? '#111b33' : '#141c2b');
+      const grad = ctx.createLinearGradient(0, 0, 0, H * 0.8);
+      if (night) {
+        grad.addColorStop(0, '#060913');
+        grad.addColorStop(1, '#111b33');
       } else {
-        skyGrad.addColorStop(0, weather === 'clear' ? '#2563eb' : '#475569');
-        skyGrad.addColorStop(1, weather === 'clear' ? '#7dd3fc' : '#94a3b8');
+        grad.addColorStop(0, w === 'clear' ? '#2563eb' : '#475569');
+        grad.addColorStop(1, w === 'clear' ? '#7dd3fc' : '#94a3b8');
       }
-      ctx.fillStyle = skyGrad;
+      ctx.fillStyle = grad;
       ctx.fillRect(0, 0, W, H);
 
-      // Relámpago en tormenta
-      if (weather === 'storm') {
-        if (Math.random() < 0.004) {
-          lightningAlpha = 0.55;
-          playThunderSound();
-        }
-        if (lightningAlpha > 0) {
-          ctx.fillStyle = `rgba(226, 232, 240, ${lightningAlpha})`;
-          ctx.fillRect(0, 0, W, H);
-          lightningAlpha *= 0.86;
-        }
+      if (w === 'storm' && Math.random() < 0.004) { lightning = 0.5; playThunder(); }
+      if (lightning > 0) {
+        ctx.fillStyle = `rgba(255,255,255,${lightning})`;
+        ctx.fillRect(0, 0, W, H);
+        lightning *= 0.85;
       }
 
-      // Sol o Luna cuadrada estilo Minecraft
-      const celSize = Math.min(W, H) * 0.075;
-      const celX = W * 0.78;
-      const celY = H * 0.16;
-      if (weather === 'clear') {
-        if (isNight) {
-          // Estrellas
+      if (w === 'clear') {
+        const cs = Math.min(W, H) * 0.07;
+        if (night) {
           stars.forEach(st => {
-            const alpha = 0.35 + 0.65 * Math.abs(Math.sin(t * 1.5 + st.phase));
-            ctx.fillStyle = `rgba(255,255,255,${alpha})`;
-            ctx.fillRect(st.x * W, st.y * H, st.size, st.size);
+            ctx.fillStyle = `rgba(255,255,255,${0.3 + 0.7 * Math.abs(Math.sin(t + st.p))})`;
+            ctx.fillRect(st.x * W, st.y * H, st.s, st.s);
           });
-          // Luna cuadrada
           ctx.fillStyle = '#f8fafc';
-          ctx.fillRect(celX, celY, celSize, celSize);
-          ctx.fillStyle = '#cbd5e1';
-          ctx.fillRect(celX + celSize * 0.2, celY + celSize * 0.2, celSize * 0.25, celSize * 0.25);
+          ctx.fillRect(W * 0.78, H * 0.14, cs, cs);
         } else {
-          // Sol cuadrado
-          ctx.fillStyle = '#fef08a';
-          ctx.fillRect(celX, celY, celSize * 1.15, celSize * 1.15);
           ctx.fillStyle = '#fde047';
-          ctx.fillRect(celX + 4, celY + 4, celSize * 1.15 - 8, celSize * 1.15 - 8);
+          ctx.fillRect(W * 0.78, H * 0.14, cs * 1.1, cs * 1.1);
         }
       }
 
-      const groundY = H * 0.78;
-
-      // Árboles voxel de fondo
-      drawPixelTree(W * 0.12, groundY, 0.9);
-      drawPixelTree(W * 0.24, groundY, 0.7);
-      drawPixelTree(W * 0.84, groundY, 0.95);
-
-      // Luz cálida de la fogata sobre el suelo
-      const campX = W * 0.5;
-      const flicker = 0.9 + Math.sin(t * 12) * 0.08 + Math.cos(t * 19) * 0.05;
-      const glowRadius = Math.max(140, W * 0.24) * flicker;
-      const glow = ctx.createRadialGradient(campX, groundY - 12, 8, campX, groundY - 12, glowRadius);
-      glow.addColorStop(0, 'rgba(251, 146, 60, 0.38)');
-      glow.addColorStop(0.5, 'rgba(234, 88, 12, 0.14)');
-      glow.addColorStop(1, 'rgba(0, 0, 0, 0)');
+      const gy = H * 0.8;
+      const cx = W * 0.5;
+      const glow = ctx.createRadialGradient(cx, gy - 10, 5, cx, gy - 10, Math.max(130, W * 0.25));
+      glow.addColorStop(0, 'rgba(251, 146, 60, 0.35)');
+      glow.addColorStop(1, 'rgba(0,0,0,0)');
       ctx.fillStyle = glow;
-      ctx.fillRect(0, groundY - glowRadius, W, glowRadius * 1.6);
+      ctx.fillRect(0, gy - 180, W, 260);
 
-      // Suelo de bloques Minecraft (Césped + Tierra)
-      const blockSize = 24;
-      for (let x = 0; x < W + blockSize; x += blockSize) {
-        // Capa superior césped
-        ctx.fillStyle = isNight ? '#143d26' : '#2e7d32';
-        ctx.fillRect(x, groundY, blockSize, 8);
-        ctx.fillStyle = isNight ? '#0f2e1d' : '#1b5e20';
-        ctx.fillRect(x + 4, groundY + 4, 8, 4);
-        // Tierra
-        ctx.fillStyle = isNight ? '#26180f' : '#5d4037';
-        ctx.fillRect(x, groundY + 8, blockSize, H - groundY);
-        // Detalle piedra/tierra voxel
-        ctx.fillStyle = isNight ? '#1c110b' : '#4e342e';
-        ctx.fillRect(x + 6, groundY + 16, 8, 8);
-      }
+      // Suelo voxel
+      ctx.fillStyle = night ? '#143d26' : '#2e7d32';
+      ctx.fillRect(0, gy, W, 8);
+      ctx.fillStyle = night ? '#26180f' : '#5d4037';
+      ctx.fillRect(0, gy + 8, W, H - gy);
 
-      // Fogata estilo Minecraft (Troncos cruzados + Carbón + Llamas)
+      // Fogata
       ctx.fillStyle = '#3e2723';
-      ctx.fillRect(campX - 28, groundY - 8, 56, 8);
-      ctx.fillStyle = '#4e342e';
-      ctx.fillRect(campX - 22, groundY - 14, 44, 7);
-      // Brasas
-      ctx.fillStyle = '#ea580c';
-      ctx.fillRect(campX - 16, groundY - 10, 32, 5);
-
-      // Llamas pixeladas animadas
-      const f1 = Math.sin(t * 14) * 6;
-      const f2 = Math.cos(t * 11) * 5;
+      ctx.fillRect(cx - 26, gy - 8, 52, 8);
+      const fl = Math.sin(t * 14) * 5;
       ctx.fillStyle = '#f97316';
-      ctx.fillRect(campX - 14, groundY - 32 + f1 * 0.4, 28, 20 - f1 * 0.4);
+      ctx.fillRect(cx - 13, gy - 30 + fl * 0.4, 26, 20);
       ctx.fillStyle = '#facc15';
-      ctx.fillRect(campX - 9, groundY - 26 + f2 * 0.5, 18, 15 - f2 * 0.5);
-      ctx.fillStyle = '#fef9c3';
-      ctx.fillRect(campX - 4, groundY - 20, 8, 9);
+      ctx.fillRect(cx - 8, gy - 23 - fl * 0.3, 16, 14);
 
-      // Generar chispas y humo
-      if (Math.random() < 0.35) {
-        embers.push({
-          x: campX + (Math.random() - 0.5) * 24,
-          y: groundY - 22,
-          vy: -0.6 - Math.random() * 1.1,
-          vx: (Math.random() - 0.5) * 0.6,
-          life: 1
-        });
-      }
-      if (Math.random() < 0.16) {
-        smoke.push({
-          x: campX + (Math.random() - 0.5) * 16,
-          y: groundY - 34,
-          vy: -0.4 - Math.random() * 0.5,
-          size: 8 + Math.random() * 8,
-          life: 1
-        });
-      }
-
-      // Dibujar humo
-      for (let i = smoke.length - 1; i >= 0; i--) {
-        const sm = smoke[i];
-        sm.y += sm.vy;
-        sm.x += Math.sin(t * 2 + i) * 0.25;
-        sm.life -= 0.008;
-        if (sm.life <= 0) { smoke.splice(i, 1); continue; }
-        ctx.fillStyle = `rgba(148, 163, 184, ${sm.life * 0.22})`;
-        ctx.fillRect(sm.x, sm.y, sm.size, sm.size);
-      }
-
-      // Dibujar chispas
+      if (Math.random() < 0.3) embers.push({ x: cx + (Math.random() - 0.5) * 20, y: gy - 20, vy: -0.8, life: 1 });
       for (let i = embers.length - 1; i >= 0; i--) {
-        const em = embers[i];
-        em.x += em.vx;
-        em.y += em.vy;
-        em.life -= 0.018;
-        if (em.life <= 0) { embers.splice(i, 1); continue; }
-        ctx.fillStyle = `rgba(253, 186, 116, ${em.life})`;
-        ctx.fillRect(em.x, em.y, 3, 3);
+        const e = embers[i];
+        e.y += e.vy; e.life -= 0.02;
+        if (e.life <= 0) { embers.splice(i, 1); continue; }
+        ctx.fillStyle = `rgba(253, 186, 116, ${e.life})`;
+        ctx.fillRect(e.x, e.y, 3, 3);
       }
 
-      // Luciérnagas de noche
-      if (isNight && weather === 'clear') {
-        fireflies.forEach(ff => {
-          ff.x = (ff.x + ff.vx + 1) % 1;
-          ff.y += ff.vy;
-          if (ff.y < 0.4 || ff.y > 0.76) ff.vy *= -1;
-          const a = 0.3 + 0.7 * Math.abs(Math.sin(t * 3 + ff.phase));
-          ctx.fillStyle = `rgba(190, 242, 100, ${a})`;
-          ctx.fillRect(ff.x * W, ff.y * H, 3, 3);
+      if (w === 'rain' || w === 'storm') {
+        ctx.fillStyle = 'rgba(125, 211, 252, 0.45)';
+        raindrops.forEach(r => {
+          r.y += r.sp;
+          if (r.y > 0.8) r.y = -0.05;
+          ctx.fillRect(r.x * W, r.y * H, 2, r.l);
         });
       }
-
-      // Lluvia / Tormenta
-      if (weather === 'rain' || weather === 'storm') {
-        const count = weather === 'storm' ? raindrops.length : Math.floor(raindrops.length * 0.55);
-        ctx.fillStyle = 'rgba(125, 211, 252, 0.45)';
-        for (let i = 0; i < count; i++) {
-          const r = raindrops[i];
-          r.y += r.speed * (weather === 'storm' ? 1.4 : 1);
-          r.x -= 0.002;
-          if (r.y > 0.8) { r.y = -0.05; r.x = Math.random(); }
-          ctx.fillRect(r.x * W, r.y * H, 2, r.len);
-        }
-      }
-
-      requestAnimationFrame(renderMinecraftScene);
+      requestAnimationFrame(renderScene);
     }
-    requestAnimationFrame(renderMinecraftScene);
+    requestAnimationFrame(renderScene);
 
     // ==========================================
-    // 4. MOTOR DE AUDIO PROCEDIMENTAL (WEB AUDIO)
+    // AUDIO WEB AUDIO API
     // ==========================================
-    let audioCtx = null;
-    let audioEnabled = false;
-    let gains = { fire: null, rain: null, night: null };
-    let volumes = { fire: 0.7, rain: 0.55, night: 0.4 };
-
-    function initProceduralAudio() {
+    let audioCtx = null, audioOn = false, gains = {}, vols = { fire: 0.7, rain: 0.55 };
+    function initAudio() {
       if (audioCtx) return;
-      const AudioContext = window.AudioContext || window.webkitAudioContext;
-      audioCtx = new AudioContext();
+      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      const buf = audioCtx.createBuffer(1, audioCtx.sampleRate * 2, audioCtx.sampleRate);
+      const d = buf.getChannelData(0);
+      for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
 
-      // Ruido base para fogata y lluvia
-      const bufferSize = audioCtx.sampleRate * 3;
-      const noiseBuffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
-      const output = noiseBuffer.getChannelData(0);
-      for (let i = 0; i < bufferSize; i++) {
-        output[i] = Math.random() * 2 - 1;
-      }
+      const fn = audioCtx.createBufferSource(); fn.buffer = buf; fn.loop = true;
+      const ff = audioCtx.createBiquadFilter(); ff.type = 'lowpass'; ff.frequency.value = 320;
+      gains.fire = audioCtx.createGain(); gains.fire.gain.value = 0;
+      fn.connect(ff).connect(gains.fire).connect(audioCtx.destination); fn.start();
 
-      // 1. Fogata (rumor grave + chasquidos aleatorios)
-      const fireNoise = audioCtx.createBufferSource();
-      fireNoise.buffer = noiseBuffer;
-      fireNoise.loop = true;
-      const fireFilter = audioCtx.createBiquadFilter();
-      fireFilter.type = 'lowpass';
-      fireFilter.frequency.value = 320;
-      gains.fire = audioCtx.createGain();
-      gains.fire.gain.value = volumes.fire * 0.25;
-      fireNoise.connect(fireFilter).connect(gains.fire).connect(audioCtx.destination);
-      fireNoise.start();
+      const rn = audioCtx.createBufferSource(); rn.buffer = buf; rn.loop = true;
+      const rf = audioCtx.createBiquadFilter(); rf.type = 'bandpass'; rf.frequency.value = 1100;
+      gains.rain = audioCtx.createGain(); gains.rain.gain.value = 0;
+      rn.connect(rf).connect(gains.rain).connect(audioCtx.destination); rn.start();
+    }
+    function updateAudio() {
+      if (!audioCtx) return;
+      gains.fire.gain.setTargetAtTime(audioOn ? vols.fire * 0.25 : 0, audioCtx.currentTime, 0.1);
+      const rm = state.env.weather === 'rain' ? 0.16 : (state.env.weather === 'storm' ? 0.28 : 0);
+      gains.rain.gain.setTargetAtTime(audioOn ? vols.rain * rm : 0, audioCtx.currentTime, 0.15);
+    }
+    function playThunder() {
+      if (!audioOn || !audioCtx) return;
+      const o = audioCtx.createOscillator(), g = audioCtx.createGain();
+      o.type = 'sawtooth'; o.frequency.setValueAtTime(60, audioCtx.currentTime);
+      o.frequency.exponentialRampToValueAtTime(25, audioCtx.currentTime + 1.1);
+      g.gain.setValueAtTime(0.15, audioCtx.currentTime); g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 1.2);
+      o.connect(g).connect(audioCtx.destination); o.start(); o.stop(audioCtx.currentTime + 1.2);
+    }
+    function toggleMasterAudio() {
+      initAudio();
+      if (audioCtx.state === 'suspended') audioCtx.resume();
+      audioOn = !audioOn;
+      updateAudio();
+      document.getElementById('icon-audio').textContent = audioOn ? '🔊' : '🔇';
+    }
+    function setChannelVolume(ch, v) { vols[ch] = v / 100; updateAudio(); }
 
-      // Chisporroteo periódico de fogata
-      setInterval(() => {
-        if (!audioEnabled || !audioCtx || volumes.fire <= 0.02) return;
-        if (Math.random() > 0.45) return;
-        const osc = audioCtx.createOscillator();
-        const clickGain = audioCtx.createGain();
-        osc.type = 'square';
-        osc.frequency.setValueAtTime(900 + Math.random() * 1400, audioCtx.currentTime);
-        clickGain.gain.setValueAtTime(volumes.fire * 0.06, audioCtx.currentTime);
-        clickGain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.03);
-        osc.connect(clickGain).connect(audioCtx.destination);
-        osc.start();
-        osc.stop(audioCtx.currentTime + 0.03);
-      }, 280);
-
-      // 2. Lluvia (ruido filtrado pasa-banda)
-      const rainNoise = audioCtx.createBufferSource();
-      rainNoise.buffer = noiseBuffer;
-      rainNoise.loop = true;
-      const rainFilter = audioCtx.createBiquadFilter();
-      rainFilter.type = 'bandpass';
-      rainFilter.frequency.value = 1100;
-      rainFilter.Q.value = 0.6;
-      gains.rain = audioCtx.createGain();
-      gains.rain.gain.value = 0;
-      rainNoise.connect(rainFilter).connect(gains.rain).connect(audioCtx.destination);
-      rainNoise.start();
-
-      // 3. Ambiente nocturno / viento suave
-      const nightNoise = audioCtx.createBufferSource();
-      nightNoise.buffer = noiseBuffer;
-      nightNoise.loop = true;
-      const nightFilter = audioCtx.createBiquadFilter();
-      nightFilter.type = 'lowpass';
-      nightFilter.frequency.value = 180;
-      gains.night = audioCtx.createGain();
-      gains.night.gain.value = volumes.night * 0.14;
-      nightNoise.connect(nightFilter).connect(gains.night).connect(audioCtx.destination);
-      nightNoise.start();
-
-      updateAudioMix();
+    // ==========================================
+    // CONTROLES COLAPSABLES Y AMBIENTE
+    // ==========================================
+    function toggleSessionControls() {
+      document.getElementById('session-controls-drawer').classList.toggle('hidden');
+    }
+    function toggleTimeOfDay() { state.env.isNight = !state.env.isNight; saveState(); syncHeaderUI(); }
+    function cycleWeather() {
+      const o = ['clear', 'rain', 'storm'];
+      state.env.weather = o[(o.indexOf(state.env.weather) + 1) % o.length];
+      saveState(); syncHeaderUI(); updateAudio();
+    }
+    function syncHeaderUI() {
+      const wMap = { clear: 'Despejado', rain: 'Lluvia', storm: 'Tormenta' };
+      const wIcon = { clear: '✨', rain: '🌧️', storm: '⛈️' };
+      document.getElementById('btn-time').textContent = state.env.isNight ? '🌙 Noche' : '☀️ Día';
+      document.getElementById('btn-weather').textContent = `${wIcon[state.env.weather]} ${wMap[state.env.weather]}`;
+      document.getElementById('badge-topic').textContent = state.currentTopic;
+      document.getElementById('header-status').textContent = `${state.env.isNight ? 'Noche' : 'Día'} • ${wMap[state.env.weather]} • Firmeza ${state.confrontation}/5`;
+      document.getElementById('quick-conf-label').textContent = `${state.confrontation}/5`;
+      document.getElementById('quick-conf-range').value = state.confrontation;
+      document.getElementById('quick-approach').value = state.approach;
+    }
+    function changeApproachQuick(val) { state.approach = val; saveState(); }
+    function changeConfrontationQuick(val) { state.confrontation = parseInt(val, 10); saveState(); syncHeaderUI(); }
+    function toggleZenMode() {
+      const exitBtn = document.getElementById('btn-exit-zen');
+      const zen = exitBtn.classList.contains('hidden');
+      document.querySelector('header').classList.toggle('hidden', zen);
+      document.getElementById('session-controls-drawer').classList.add('hidden');
+      document.getElementById('view-chat').classList.toggle('hidden', zen);
+      document.getElementById('bottom-nav').classList.toggle('hidden', zen);
+      exitBtn.classList.toggle('hidden', !zen);
     }
 
-    function updateAudioMix() {
-      if (!audioCtx || !gains.fire) return;
-      if (!audioEnabled) {
-        gains.fire.gain.setTargetAtTime(0, audioCtx.currentTime, 0.1);
-        gains.rain.gain.setTargetAtTime(0, audioCtx.currentTime, 0.1);
-        gains.night.gain.setTargetAtTime(0, audioCtx.currentTime, 0.1);
+    function renderMoodPills() {
+      const box = document.getElementById('mood-pills');
+      box.innerHTML = Array.from({ length: 10 }, (_, i) => i + 1).map(n => `
+        <button onclick="setMood(${n})" class="w-6 h-6 rounded text-[11px] font-bold ${state.currentMood === n ? 'bg-emerald-500 text-slate-950' : 'bg-white/10 text-slate-300'}">${n}</button>
+      `).join('');
+    }
+    function setMood(n) { state.currentMood = n; saveState(); renderMoodPills(); }
+
+    // ==========================================
+    // APARTADOS Y CHAT CON GEMINI
+    // ==========================================
+    function renderTopics() {
+      const sel = document.getElementById('topic-select');
+      const fsel = document.getElementById('filter-session-topic');
+      sel.innerHTML = state.topics.map(t => `<option value="${t}" ${t === state.currentTopic ? 'selected' : ''}>📁 ${t}</option>`).join('');
+      fsel.innerHTML = `<option value="ALL">Todos los temas</option>` + state.topics.map(t => `<option value="${t}">${t}</option>`).join('');
+      syncHeaderUI();
+    }
+    function changeCurrentTopic(t) { state.currentTopic = t; saveState(); syncHeaderUI(); }
+    function addNewTopicPrompt() {
+      const n = prompt('Nombre del nuevo tema:');
+      if (!n || !n.trim()) return;
+      if (!state.topics.includes(n.trim())) state.topics.push(n.trim());
+      state.currentTopic = n.trim();
+      saveState(); renderTopics();
+    }
+
+    function renderChat() {
+      const box = document.getElementById('chat-messages');
+      const empty = document.getElementById('chat-empty-state');
+      if (state.currentChat.length === 0) {
+        box.innerHTML = '';
+        box.appendChild(empty);
         return;
       }
-      gains.fire.gain.setTargetAtTime(volumes.fire * 0.25, audioCtx.currentTime, 0.15);
-      const rainActive = state.env.weather === 'rain' ? 0.16 : (state.env.weather === 'storm' ? 0.28 : 0);
-      gains.rain.gain.setTargetAtTime(volumes.rain * rainActive, audioCtx.currentTime, 0.2);
-      gains.night.gain.setTargetAtTime(volumes.night * 0.14, audioCtx.currentTime, 0.15);
+      box.innerHTML = state.currentChat.map(m => {
+        const u = m.role === 'user';
+        return `<div class="flex ${u ? 'justify-end' : 'justify-start'}">
+          <div class="max-w-[88%] rounded-2xl px-3.5 py-2.5 text-xs sm:text-sm leading-relaxed ${u ? 'bg-indigo-600 text-white rounded-br-sm' : 'glass-card text-slate-100 rounded-bl-sm'}">
+            <div class="text-[10px] opacity-60 mb-0.5">${u ? 'Tú' : 'Psicólogo IA'} • ${m.time || ''}</div>
+            <div class="whitespace-pre-wrap break-words">${escapeHtml(m.text)}</div>
+          </div>
+        </div>`;
+      }).join('');
+      scrollChatToBottom(false);
     }
 
-    function playThunderSound() {
-      if (!audioEnabled || !audioCtx) return;
-      const osc = audioCtx.createOscillator();
-      const g = audioCtx.createGain();
-      osc.type = 'sawtooth';
-      osc.frequency.setValueAtTime(65, audioCtx.currentTime);
-      osc.frequency.exponentialRampToValueAtTime(28, audioCtx.currentTime + 1.2);
-      g.gain.setValueAtTime(0.18, audioCtx.currentTime);
-      g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 1.4);
-      osc.connect(g).connect(audioCtx.destination);
-      osc.start();
-      osc.stop(audioCtx.currentTime + 1.4);
+    function scrollChatToBottom(delayed) {
+      const box = document.getElementById('chat-messages');
+      if (!box) return;
+      const fn = () => { box.scrollTop = box.scrollHeight; };
+      fn();
+      if (delayed) setTimeout(fn, 250);
     }
 
-    function toggleMasterAudio() {
-      initProceduralAudio();
-      if (audioCtx.state === 'suspended') audioCtx.resume();
-      audioEnabled = !audioEnabled;
-      updateAudioMix();
-      document.getElementById('icon-audio').textContent = audioEnabled ? '🔊' : '🔇';
-      document.getElementById('label-audio').textContent = audioEnabled ? 'Audio On' : 'Audio Off';
+    function autoResizeTextarea(el) {
+      el.style.height = 'auto';
+      el.style.height = Math.min(el.scrollHeight, 96) + 'px';
     }
 
-    function setChannelVolume(channel, val) {
-      volumes[channel] = val / 100;
-      document.getElementById(`val-${channel}`).textContent = `${val}%`;
-      updateAudioMix();
+    function useStarterPrompt(txt) {
+      const inp = document.getElementById('user-input');
+      inp.value = txt;
+      sendMessage();
     }
 
-    function toggleTimeOfDay() {
-      state.env.isNight = !state.env.isNight;
-      saveState();
-      syncEnvUI();
+    let sending = false;
+    async function sendMessage() {
+      if (sending) return;
+      const inp = document.getElementById('user-input');
+      const text = inp.value.trim();
+      if (!text) return;
+      if (!state.apiKey) { openSettings('general'); return; }
+
+      const now = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      state.currentChat.push({ role: 'user', text, time: now });
+      inp.value = ''; inp.style.height = 'auto';
+      saveState(); renderChat();
+
+      sending = true;
+      const btn = document.getElementById('btn-send');
+      btn.textContent = '...'; btn.disabled = true;
+
+      const box = document.getElementById('chat-messages');
+      const loader = document.createElement('div');
+      loader.className = 'flex justify-start';
+      loader.innerHTML = `<div class="glass-card rounded-2xl px-3.5 py-2 text-xs text-slate-300 animate-pulse">Analizando...</div>`;
+      box.appendChild(loader);
+      scrollChatToBottom(false);
+
+      const sysPrompt = `Eres un psicólogo clínico (${state.approach}). Nivel de firmeza/confrontación: ${state.confrontation}/5. Tema: "${state.currentTopic}". Ánimo inicial: ${state.currentMood}/10.
+Reglas: No des la razón por cortesía; valida la emoción pero cuestiona sesgos cognitivos con 1 o 2 preguntas socráticas breves y directas.
+Expediente previo: Sesiones=${state.record.totalSessions}, Resumen=${state.record.summary}, Sesgos=${state.record.distortions.join(', ')}, Tareas=${state.record.tasks.map(t => t.text).join('; ')}.`;
+
+      try {
+        const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${encodeURIComponent(state.apiKey)}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            systemInstruction: { parts: [{ text: sysPrompt }] },
+            contents: state.currentChat.map(m => ({ role: m.role === 'user' ? 'user' : 'model', parts: [{ text: m.text }] })),
+            generationConfig: { temperature: 0.65 }
+          })
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error?.message || 'Error de API');
+        const reply = data.candidates?.[0]?.content?.parts?.[0]?.text || 'Sin respuesta.';
+        state.currentChat.push({ role: 'assistant', text: reply.trim(), time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) });
+        saveState();
+      } catch (e) {
+        state.currentChat.push({ role: 'assistant', text: '⚠️ ' + e.message, time: now });
+      } finally {
+        sending = false; btn.textContent = 'Enviar'; btn.disabled = false;
+        renderChat();
+      }
     }
 
-    function cycleWeather() {
-      const order = ['clear', 'rain', 'storm'];
-      const next = order[(order.indexOf(state.env.weather) + 1) % order.length];
-      state.env.weather = next;
-      saveState();
-      syncEnvUI();
-      updateAudioMix();
+    function clearCurrentChatOnly() {
+      if (!state.currentChat.length || !confirm('¿Limpiar el chat actual sin guardar?')) return;
+      state.currentChat = []; saveState(); renderChat();
+      document.getElementById('session-controls-drawer').classList.add('hidden');
     }
 
-    function syncEnvUI() {
-      document.getElementById('icon-time').textContent = state.env.isNight ? '🌙' : '☀️';
-      document.getElementById('label-time').textContent = state.env.isNight ? 'Noche' : 'Día';
-      const wMap = {
-        clear: ['✨', 'Despejado'],
-        rain: ['🌧️', 'Lluvia'],
-        storm: ['⛈️', 'Tormenta']
-      };
-      document.getElementById('icon-weather').textContent = wMap[state.env.weather][0];
-      document.getElementById('label-weather').textContent = wMap[state.env.weather][1];
-      document.getElementById('header-subtitle').textContent = `${state.currentTopic} • ${state.env.isNight ? 'Noche' : 'Día'}`;
-    }
+    async function finishAndAnalyzeSession() {
+      if (state.currentChat.length < 2) { alert('Escribe al menos un intercambio antes de guardar.'); return; }
+      if (!state.apiKey) { openSettings('general'); return; }
+      const btn = document.getElementById('btn-finish-session');
+      btn.textContent = '...'; btn.disabled = true;
 
-    function toggleZenMode() {
-      const ids = ['main-nav', 'view-chat', 'view-sessions', 'view-record', 'view-tools', 'view-guide'];
-      const exitBtn = document.getElementById('btn-exit-zen');
-      const isZen = !exitBtn.classList.contains('hidden');
-      if (!isZen) {
-        ids.forEach(id => document.getElementById(id).classList.add('hidden'));
-        exitBtn.classList.remove('hidden');
-      } else {
-        document.getElementById('main-nav').classList.remove('hidden');
-        exitBtn.classList.add('hidden');
-        switchTab('chat');
+      const transcript = state.currentChat.map(m => `${m.role === 'user' ? 'Paciente' : 'Terapeuta'}: ${m.text}`).join('\n');
+      const prompt = `Analiza esta sesión y devuelve JSON estricto: {"moodScore":1-10,"summary":"resumen actualizado","distortions":["sesgos"],"newTasks":["tarea"]}. Anterior: ${JSON.stringify(state.record)}. Hoy: ${transcript}`;
+
+      try {
+        const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${encodeURIComponent(state.apiKey)}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ contents: [{ role: 'user', parts: [{ text: prompt }] }], generationConfig: { responseMimeType: 'application/json' } })
+        });
+        const data = await res.json();
+        const parsed = JSON.parse(data.candidates?.[0]?.content?.parts?.[0]?.text || '{}');
+
+        state.sessions.unshift({ id: Date.now(), date: new Date().toLocaleString(), topic: state.currentTopic, mood: parsed.moodScore || state.currentMood, messages: [...state.currentChat] });
+        state.record.totalSessions += 1;
+        if (parsed.summary) state.record.summary = parsed.summary;
+        if (Array.isArray(parsed.distortions)) state.record.distortions = Array.from(new Set([...state.record.distortions, ...parsed.distortions]));
+        if (Array.isArray(parsed.newTasks)) parsed.newTasks.forEach(t => state.record.tasks.push({ text: t, done: false }));
+        state.currentChat = [];
+        saveState(); renderChat();
+        alert('✅ Sesión guardada y expediente actualizado.');
+      } catch (e) {
+        alert('Error al analizar: ' + e.message);
+      } finally {
+        btn.textContent = 'Guardar'; btn.disabled = false;
       }
     }
 
     // ==========================================
-    // 5. NAVEGACIÓN Y GESTIÓN DE APARTADOS
+    // NAVEGACIÓN SECUNDARIA Y SYNC
     // ==========================================
     function switchTab(tab) {
-      ['chat', 'sessions', 'record', 'tools', 'guide'].forEach(t => {
-        document.getElementById(`view-${t}`).classList.toggle('hidden', t !== tab);
-      });
-      document.querySelectorAll('.nav-btn').forEach(btn => {
-        const active = btn.dataset.tab === tab;
-        btn.className = active
-          ? 'nav-btn px-3 py-1.5 rounded-lg text-xs font-medium bg-indigo-600 text-white whitespace-nowrap'
-          : 'nav-btn px-3 py-1.5 rounded-lg text-xs font-medium text-slate-300 hover:bg-white/10 whitespace-nowrap';
+      ['chat', 'sessions', 'record', 'tools'].forEach(t => document.getElementById(`view-${t}`).classList.toggle('hidden', t !== tab));
+      document.querySelectorAll('.nav-btn').forEach(b => {
+        const act = b.dataset.tab === tab;
+        b.className = act ? 'nav-btn py-1 rounded-lg bg-indigo-600 text-white text-[11px] font-medium' : 'nav-btn py-1 rounded-lg text-slate-300 text-[11px]';
       });
       if (tab === 'sessions') renderSessionsList();
       if (tab === 'record') renderRecordView();
       if (tab === 'tools') renderCbtLogs();
     }
 
-    function renderTopicsSelect() {
-      const sel = document.getElementById('topic-select');
-      const filterSel = document.getElementById('filter-session-topic');
-      sel.innerHTML = state.topics.map(t => `<option value="${t}" ${t === state.currentTopic ? 'selected' : ''}>📁 ${t}</option>`).join('');
-      filterSel.innerHTML = `<option value="ALL">Todos los apartados</option>` +
-        state.topics.map(t => `<option value="${t}">${t}</option>`).join('');
-      syncEnvUI();
-    }
-
-    function changeCurrentTopic(topic) {
-      state.currentTopic = topic;
-      saveState();
-      syncEnvUI();
-    }
-
-    function addNewTopicPrompt() {
-      const name = prompt('Nombre del nuevo apartado temático (ej. Proyecto Personal, Pareja, Finanzas):');
-      if (!name || !name.trim()) return;
-      const clean = name.trim();
-      if (!state.topics.includes(clean)) {
-        state.topics.push(clean);
-      }
-      state.currentTopic = clean;
-      saveState();
-      renderTopicsSelect();
-    }
-
-    // ==========================================
-    // 6. CHAT TERAPÉUTICO CON GEMINI API
-    // ==========================================
-    function buildSystemPrompt() {
-      const rec = state.record;
-      const cbtRecent = state.cbtLogs.slice(-3).map(l => `- Situación: ${l.sit} | Pensamiento: ${l.thought} | Alternativa: ${l.rat}`).join('\n');
-      return `Eres un psicólogo clínico experto con enfoque en ${state.approach} y Entrevista Motivacional.
-Nivel de confrontación configurado por el usuario: ${state.confrontation} de 5 (1 = muy suave, 5 = directo, socrático y sin rodeos).
-Apartado temático actual de la sesión: "${state.currentTopic}".
-
-REGLAS CLÍNICAS ESTRICTAS:
-1. NO seas un asistente complaciente ni des la razón automáticamente. Valida la emoción ("Entiendo que te frustre"), pero cuestiona interpretaciones sesgadas o excusas ("¿Qué evidencia objetiva tienes de eso?").
-2. Identifica distorsiones cognitivas (catastrofismo, todo-o-nada, lectura de mente, victimismo) y haz 1 o 2 preguntas socráticas precisas para que el usuario reflexione.
-3. Responde de forma concisa y humana (ideal para leer en pantalla móvil), evitando listas eternas de consejos genéricos.
-4. Si detectas ideación suicida, autolesiones o crisis grave, detén el rol analítico y brinda ayuda inmediata (Línea de la Vida México: 800 911 2000).
-
-EXPEDIENTE PREVIO DEL PACIENTE:
-- Sesiones totales: ${rec.totalSessions}
-- Resumen evolutivo: ${rec.summary}
-- Distorsiones frecuentes: ${rec.distortions.join(', ') || 'Ninguna aún'}
-- Temas recurrentes: ${rec.themes.join(', ') || 'Ninguno aún'}
-- Acuerdos/Tareas pendientes: ${rec.tasks.map(t => `${t.text} (${t.done ? 'Completada' : 'Pendiente'})`).join('; ') || 'Ninguna'}
-${cbtRecent ? `\nREGISTROS RECIENTES EN BITÁCORA TCC:\n${cbtRecent}` : ''}`;
-    }
-
-    function renderChatMessages() {
-      const container = document.getElementById('chat-messages');
-      const empty = document.getElementById('chat-empty-state');
-      if (state.currentChat.length === 0) {
-        container.innerHTML = '';
-        container.appendChild(empty);
-        empty.classList.remove('hidden');
-        return;
-      }
-      container.innerHTML = state.currentChat.map(msg => {
-        const isUser = msg.role === 'user';
-        return `
-          <div class="flex ${isUser ? 'justify-end' : 'justify-start'}">
-            <div class="max-w-[88%] sm:max-w-[78%] rounded-2xl px-3.5 py-2.5 text-xs sm:text-sm leading-relaxed shadow ${
-              isUser
-                ? 'bg-indigo-600 text-white rounded-br-sm'
-                : 'glass-card text-slate-100 border border-white/10 rounded-bl-sm'
-            }">
-              <div class="text-[10px] opacity-65 mb-1 font-medium">${isUser ? 'Tú' : 'Psicólogo IA'} • ${msg.time || ''}</div>
-              <div class="whitespace-pre-wrap break-words">${escapeHtml(msg.text)}</div>
-            </div>
-          </div>
-        `;
-      }).join('');
-      scrollChatToBottom(false);
-    }
-
-    function scrollChatToBottom(delayed) {
-      const el = document.getElementById('chat-messages');
-      if (!el) return;
-      const doScroll = () => { el.scrollTop = el.scrollHeight; };
-      doScroll();
-      if (delayed) setTimeout(doScroll, 220);
-    }
-
-    function autoResizeTextarea(el) {
-      el.style.height = 'auto';
-      el.style.height = Math.min(el.scrollHeight, 112) + 'px';
-    }
-
-    function handleInputKeydown(e) {
-      if (e.key === 'Enter' && !e.shiftKey && window.innerWidth >= 768) {
-        e.preventDefault();
-        sendMessage();
-      }
-    }
-
-    function useStarterPrompt(text) {
-      const input = document.getElementById('user-input');
-      input.value = text;
-      autoResizeTextarea(input);
-      sendMessage();
-    }
-
-    async function sendMessage() {
-      if (isSending) return;
-      const input = document.getElementById('user-input');
-      const text = input.value.trim();
-      if (!text) return;
-
-      if (!state.apiKey) {
-        openSettings('general');
-        alert('Primero ingresa tu API Key gratuita de Google Gemini.');
-        return;
-      }
-
-      const nowStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-      state.currentChat.push({ role: 'user', text, time: nowStr });
-      input.value = '';
-      input.style.height = 'auto';
-      saveState();
-      renderChatMessages();
-
-      isSending = true;
-      const sendBtn = document.getElementById('btn-send');
-      sendBtn.textContent = '...';
-      sendBtn.disabled = true;
-
-      // Burbuja temporal de pensamiento
-      const container = document.getElementById('chat-messages');
-      const typingDiv = document.createElement('div');
-      typingDiv.id = 'typing-indicator';
-      typingDiv.className = 'flex justify-start';
-      typingDiv.innerHTML = `<div class="glass-card rounded-2xl px-4 py-2.5 text-xs text-slate-300 animate-pulse">Analizando lo que dijiste...</div>`;
-      container.appendChild(typingDiv);
-      scrollChatToBottom(false);
-
-      try {
-        const contents = state.currentChat.map(m => ({
-          role: m.role === 'user' ? 'user' : 'model',
-          parts: [{ text: m.text }]
-        }));
-
-        const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${encodeURIComponent(state.apiKey)}`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            systemInstruction: { parts: [{ text: buildSystemPrompt() }] },
-            contents,
-            generationConfig: { temperature: 0.65 }
-          })
-        });
-
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.error?.message || 'Error en la API de Gemini');
-
-        const reply = data.candidates?.[0]?.content?.parts?.[0]?.text || 'No pude generar una respuesta.';
-        state.currentChat.push({
-          role: 'assistant',
-          text: reply.trim(),
-          time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-        });
-        saveState();
-      } catch (err) {
-        state.currentChat.push({
-          role: 'assistant',
-          text: `⚠️ Error de conexión: ${err.message}`,
-          time: nowStr
-        });
-      } finally {
-        isSending = false;
-        sendBtn.textContent = 'Enviar';
-        sendBtn.disabled = false;
-        renderChatMessages();
-      }
-    }
-
-    function clearCurrentChatOnly() {
-      if (state.currentChat.length === 0) return;
-      if (!confirm('¿Borrar los mensajes de esta conversación sin guardarlos en el expediente?')) return;
-      state.currentChat = [];
-      saveState();
-      renderChatMessages();
-    }
-
-    async function finishAndAnalyzeSession() {
-      if (state.currentChat.length < 2) {
-        alert('Conversa un poco más antes de guardar y analizar la sesión.');
-        return;
-      }
-      if (!state.apiKey) {
-        alert('Necesitas tu API Key configurada para analizar la sesión.');
-        return;
-      }
-
-      const btn = document.getElementById('btn-finish-session');
-      btn.textContent = 'Analizando...';
-      btn.disabled = true;
-
-      const transcript = state.currentChat.map(m => `${m.role === 'user' ? 'Paciente' : 'Terapeuta'}: ${m.text}`).join('\n');
-
-      const analysisPrompt = `Analiza esta sesión psicológica y devuelve ÚNICAMENTE un JSON válido (sin markdown) con esta estructura:
-{
-  "moodScore": número del 1 al 10 estimando el estado emocional final del paciente,
-  "summary": "resumen evolutivo actualizado integrando lo anterior con hoy",
-  "distortions": ["lista actualizada de distorsiones cognitivas detectadas"],
-  "themes": ["lista actualizada de temas clave"],
-  "newTasks": ["1 o 2 tareas o reflexiones concretas acordadas hoy"]
-}
-
-EXPEDIENTE ANTERIOR:
-${JSON.stringify(state.record)}
-
-TRANSCRIPCIÓN DE HOY (Apartado: ${state.currentTopic}):
-${transcript}`;
-
-      try {
-        const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${encodeURIComponent(state.apiKey)}`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            contents: [{ role: 'user', parts: [{ text: analysisPrompt }] }],
-            generationConfig: { responseMimeType: 'application/json' }
-          })
-        });
-
-        const data = await res.json();
-        const rawJson = data.candidates?.[0]?.content?.parts?.[0]?.text || '{}';
-        const parsed = JSON.parse(rawJson);
-
-        state.sessions.unshift({
-          id: Date.now(),
-          date: new Date().toLocaleString(),
-          topic: state.currentTopic,
-          mood: parsed.moodScore || 6,
-          messages: [...state.currentChat]
-        });
-
-        state.record.totalSessions += 1;
-        state.record.summary = parsed.summary || state.record.summary;
-        state.record.distortions = Array.from(new Set([...state.record.distortions, ...(parsed.distortions || [])]));
-        state.record.themes = Array.from(new Set([...state.record.themes, ...(parsed.themes || [])]));
-        if (Array.isArray(parsed.newTasks)) {
-          parsed.newTasks.forEach(t => state.record.tasks.push({ text: t, done: false }));
-        }
-
-        state.currentChat = [];
-        saveState();
-        renderChatMessages();
-        document.getElementById('backup-reminder-banner').classList.remove('hidden');
-      } catch (err) {
-        alert('No se pudo analizar la sesión: ' + err.message);
-      } finally {
-        btn.textContent = 'Guardar Sesión';
-        btn.disabled = false;
-      }
-    }
-
-    // ==========================================
-    // 7. HISTORIAL, EXPEDIENTE Y HERRAMIENTAS
-    // ==========================================
     function renderSessionsList() {
-      const filter = document.getElementById('filter-session-topic').value;
-      const list = document.getElementById('sessions-list-container');
-      const filtered = filter === 'ALL' ? state.sessions : state.sessions.filter(s => s.topic === filter);
-
-      if (filtered.length === 0) {
-        list.innerHTML = `<div class="glass-card rounded-2xl p-6 text-center text-xs text-slate-400">No hay sesiones guardadas en este apartado.</div>`;
-        return;
-      }
-
-      list.innerHTML = filtered.map(s => `
-        <div class="glass-card rounded-2xl p-4 flex items-center justify-between gap-3">
+      const f = document.getElementById('filter-session-topic').value;
+      const items = f === 'ALL' ? state.sessions : state.sessions.filter(s => s.topic === f);
+      document.getElementById('sessions-list-container').innerHTML = items.length ? items.map(s => `
+        <div class="glass-card rounded-xl p-3 flex items-center justify-between gap-2">
           <div class="min-w-0">
-            <div class="flex items-center gap-2">
-              <span class="px-2 py-0.5 rounded bg-indigo-500/20 text-indigo-300 text-[10px] font-semibold">${escapeHtml(s.topic)}</span>
-              <span class="text-[11px] text-slate-400">${s.date}</span>
-            </div>
-            <p class="text-xs text-slate-200 truncate mt-1.5">${escapeHtml(s.messages[0]?.text || 'Sesión registrada')}</p>
+            <span class="text-[10px] px-1.5 py-0.5 rounded bg-indigo-500/20 text-indigo-300">${escapeHtml(s.topic)}</span>
+            <span class="text-[10px] text-slate-400 ml-1">${s.date}</span>
+            <p class="text-xs text-slate-200 truncate mt-1">${escapeHtml(s.messages[0]?.text || '')}</p>
           </div>
-          <div class="flex items-center gap-1.5 flex-shrink-0">
-            <button onclick="viewSessionTranscript(${s.id})" class="px-3 py-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-xs text-white">Leer</button>
-            <button onclick="deleteSingleSession(${s.id})" class="px-2.5 py-1.5 rounded-lg bg-rose-500/20 hover:bg-rose-500/30 text-xs text-rose-200">🗑️</button>
+          <div class="flex gap-1.5 flex-shrink-0">
+            <button onclick="viewSessionTranscript(${s.id})" class="px-2.5 py-1 rounded bg-white/10 text-xs text-white">Ver</button>
+            <button onclick="deleteSingleSession(${s.id})" class="px-2 py-1 rounded bg-rose-500/20 text-xs text-rose-200">🗑️</button>
           </div>
         </div>
-      `).join('');
+      `).join('') : '<div class="glass-card rounded-xl p-4 text-center text-xs text-slate-400">Sin sesiones guardadas.</div>';
     }
-
     function viewSessionTranscript(id) {
       const s = state.sessions.find(x => x.id === id);
       if (!s) return;
-      document.getElementById('modal-session-title').textContent = `Apartado: ${s.topic}`;
-      document.getElementById('modal-session-meta').textContent = `${s.date} • Ánimo estimado: ${s.mood}/10`;
+      document.getElementById('modal-session-title').textContent = `${s.topic} • ${s.date}`;
       document.getElementById('modal-session-body').innerHTML = s.messages.map(m => `
-        <div class="p-3 rounded-xl ${m.role === 'user' ? 'bg-indigo-600/25 border border-indigo-400/20' : 'bg-white/5'}">
-          <div class="text-[10px] font-bold text-slate-400 mb-1">${m.role === 'user' ? 'TÚ' : 'PSICÓLOGO IA'}</div>
-          <div class="whitespace-pre-wrap text-slate-100">${escapeHtml(m.text)}</div>
+        <div class="p-2.5 rounded-lg ${m.role === 'user' ? 'bg-indigo-600/25' : 'bg-white/5'}">
+          <div class="text-[10px] font-bold text-slate-400">${m.role === 'user' ? 'TÚ' : 'PSICÓLOGO'}</div>
+          <div class="whitespace-pre-wrap text-slate-100 mt-0.5">${escapeHtml(m.text)}</div>
         </div>
       `).join('');
       document.getElementById('transcript-modal').classList.remove('hidden');
     }
-
-    function deleteSingleSession(id) {
-      if (!confirm('¿Eliminar permanentemente esta sesión?')) return;
-      state.sessions = state.sessions.filter(s => s.id !== id);
-      saveState();
-      renderSessionsList();
-    }
-
+    function deleteSingleSession(id) { if (confirm('¿Borrar sesión?')) { state.sessions = state.sessions.filter(s => s.id !== id); saveState(); renderSessionsList(); } }
     function deleteFilteredSessions() {
-      const filter = document.getElementById('filter-session-topic').value;
-      if (!confirm(`¿Eliminar todas las sesiones de "${filter === 'ALL' ? 'Todos los apartados' : filter}"?`)) return;
-      state.sessions = filter === 'ALL' ? [] : state.sessions.filter(s => s.topic !== filter);
-      saveState();
-      renderSessionsList();
+      const f = document.getElementById('filter-session-topic').value;
+      if (!confirm('¿Borrar estas sesiones?')) return;
+      state.sessions = f === 'ALL' ? [] : state.sessions.filter(s => s.topic !== f);
+      saveState(); renderSessionsList();
     }
 
+    let moodChart = null;
     function renderRecordView() {
       document.getElementById('stat-sessions').textContent = state.record.totalSessions;
-      document.getElementById('stat-approach').textContent = state.approach;
       document.getElementById('stat-confrontation').textContent = `${state.confrontation} / 5`;
       document.getElementById('record-summary').textContent = state.record.summary;
+      document.getElementById('record-distortions').innerHTML = state.record.distortions.map(d => `<span class="px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-200">${escapeHtml(d)}</span>`).join('') || '<span class="text-slate-400">Ninguno aún</span>';
+      document.getElementById('record-tasks').innerHTML = state.record.tasks.map((t, i) => `
+        <label class="flex items-center gap-2 p-1.5 rounded bg-white/5">
+          <input type="checkbox" ${t.done ? 'checked' : ''} onchange="state.record.tasks[${i}].done=!state.record.tasks[${i}].done;saveState();renderRecordView();" />
+          <span class="${t.done ? 'line-through text-slate-400' : 'text-slate-100'}">${escapeHtml(t.text)}</span>
+        </label>
+      `).join('') || '<span class="text-slate-400">Sin tareas</span>';
 
-      document.getElementById('record-distortions').innerHTML = state.record.distortions.length
-        ? state.record.distortions.map(d => `<span class="px-2.5 py-1 rounded-full bg-amber-500/20 border border-amber-400/30 text-amber-200">${escapeHtml(d)}</span>`).join('')
-        : '<span class="text-slate-400">Sin sesgos registrados aún.</span>';
-
-      document.getElementById('record-themes').innerHTML = state.record.themes.length
-        ? state.record.themes.map(t => `<span class="px-2.5 py-1 rounded-full bg-sky-500/20 border border-sky-400/30 text-sky-200">${escapeHtml(t)}</span>`).join('')
-        : '<span class="text-slate-400">Sin temas recurrentes aún.</span>';
-
-      document.getElementById('record-tasks').innerHTML = state.record.tasks.length
-        ? state.record.tasks.map((task, idx) => `
-            <label class="flex items-center gap-2.5 p-2 rounded-lg bg-white/5 cursor-pointer">
-              <input type="checkbox" ${task.done ? 'checked' : ''} onchange="toggleTaskDone(${idx})" class="accent-emerald-500" />
-              <span class="${task.done ? 'line-through text-slate-400' : 'text-slate-100'}">${escapeHtml(task.text)}</span>
-            </label>
-          `).join('')
-        : '<span class="text-slate-400 text-xs">No hay tareas pendientes.</span>';
-
-      // Gráfica de ánimo
-      const ctxChart = document.getElementById('mood-chart');
-      if (moodChartInstance) moodChartInstance.destroy();
-      const ordered = [...state.sessions].reverse();
-      moodChartInstance = new Chart(ctxChart, {
+      if (moodChart) moodChart.destroy();
+      const ord = [...state.sessions].reverse();
+      moodChart = new Chart(document.getElementById('mood-chart'), {
         type: 'line',
-        data: {
-          labels: ordered.map((_, i) => `Sesión ${i + 1}`),
-          datasets: [{
-            label: 'Estado emocional (1-10)',
-            data: ordered.map(s => s.mood || 6),
-            borderColor: '#818cf8',
-            backgroundColor: 'rgba(129, 140, 248, 0.2)',
-            tension: 0.35,
-            fill: true
-          }]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          scales: {
-            y: { min: 1, max: 10, ticks: { color: '#94a3b8' }, grid: { color: 'rgba(255,255,255,0.06)' } },
-            x: { ticks: { color: '#94a3b8' }, grid: { display: false } }
-          },
-          plugins: { legend: { labels: { color: '#e2e8f0' } } }
-        }
+        data: { labels: ord.map((_, i) => `S${i + 1}`), datasets: [{ label: 'Ánimo', data: ord.map(s => s.mood || 5), borderColor: '#818cf8', tension: 0.3 }] },
+        options: { responsive: true, maintainAspectRatio: false, scales: { y: { min: 1, max: 10 } } }
       });
     }
 
-    function toggleTaskDone(idx) {
-      state.record.tasks[idx].done = !state.record.tasks[idx].done;
-      saveState();
-      renderRecordView();
-    }
-
-    function recalculateRecordFromHistory() {
-      state.record.totalSessions = state.sessions.length;
-      saveState();
-      renderRecordView();
-    }
-
-    // Respiración 4-4-4-4
-    let breathingTimer = null;
+    let bTimer = null;
     function toggleBreathingExercise() {
-      const circle = document.getElementById('breathing-circle');
-      const btn = document.getElementById('btn-breathing');
-      if (breathingTimer) {
-        clearInterval(breathingTimer);
-        breathingTimer = null;
-        circle.textContent = 'Listo';
-        circle.style.transform = 'scale(1)';
-        btn.textContent = 'Iniciar Ciclo';
-        return;
-      }
-      const phases = [
-        { label: 'Inhala (4s)', scale: 'scale(1.25)' },
-        { label: 'Mantén (4s)', scale: 'scale(1.25)' },
-        { label: 'Exhala (4s)', scale: 'scale(0.95)' },
-        { label: 'Pausa (4s)', scale: 'scale(0.95)' }
-      ];
-      let step = 0;
-      btn.textContent = 'Detener';
-      const runPhase = () => {
-        circle.textContent = phases[step].label;
-        circle.style.transform = phases[step].scale;
-        step = (step + 1) % phases.length;
-      };
-      runPhase();
-      breathingTimer = setInterval(runPhase, 4000);
+      const c = document.getElementById('breathing-circle'), b = document.getElementById('btn-breathing');
+      if (bTimer) { clearInterval(bTimer); bTimer = null; c.textContent = 'Listo'; c.style.transform = 'scale(1)'; b.textContent = 'Iniciar'; return; }
+      const p = [['Inhala', 'scale(1.25)'], ['Mantén', 'scale(1.25)'], ['Exhala', 'scale(0.9)'], ['Pausa', 'scale(0.9)']];
+      let i = 0; b.textContent = 'Parar';
+      const fn = () => { c.textContent = p[i][0]; c.style.transform = p[i][1]; i = (i + 1) % 4; };
+      fn(); bTimer = setInterval(fn, 4000);
     }
-
     function saveCbtLog() {
-      const sit = document.getElementById('cbt-situation').value.trim();
-      const thought = document.getElementById('cbt-thought').value.trim();
-      const rat = document.getElementById('cbt-rational').value.trim();
-      if (!sit || !thought) return;
-      state.cbtLogs.unshift({ date: new Date().toLocaleDateString(), sit, thought, rat });
-      document.getElementById('cbt-situation').value = '';
-      document.getElementById('cbt-thought').value = '';
-      document.getElementById('cbt-rational').value = '';
-      saveState();
-      renderCbtLogs();
+      const s = document.getElementById('cbt-situation').value.trim(), t = document.getElementById('cbt-thought').value.trim(), r = document.getElementById('cbt-rational').value.trim();
+      if (!s || !t) return;
+      state.cbtLogs.unshift({ s, t, r });
+      document.getElementById('cbt-situation').value = ''; document.getElementById('cbt-thought').value = ''; document.getElementById('cbt-rational').value = '';
+      saveState(); renderCbtLogs();
     }
-
     function renderCbtLogs() {
-      const box = document.getElementById('cbt-logs-list');
-      box.innerHTML = state.cbtLogs.map(l => `
-        <div class="p-2 rounded-lg bg-white/5 border border-white/10">
-          <div class="text-[10px] text-slate-400">${l.date} • ${escapeHtml(l.sit)}</div>
-          <div class="text-rose-300">Pensamiento: ${escapeHtml(l.thought)}</div>
-          ${l.rat ? `<div class="text-emerald-300">Realidad: ${escapeHtml(l.rat)}</div>` : ''}
-        </div>
-      `).join('');
+      document.getElementById('cbt-logs-list').innerHTML = state.cbtLogs.map(l => `<div class="p-2 rounded bg-white/5"><div class="text-slate-400">${escapeHtml(l.s)}</div><div class="text-rose-300">${escapeHtml(l.t)}</div></div>`).join('');
     }
 
-    // Dictado por voz
     function toggleVoiceInput() {
-      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-      if (!SpeechRecognition) {
-        alert('Tu navegador no soporta dictado por voz directo.');
-        return;
-      }
-      const rec = new SpeechRecognition();
-      rec.lang = 'es-MX';
-      const btn = document.getElementById('btn-mic');
-      btn.classList.add('bg-rose-600');
-      rec.onresult = (e) => {
-        const transcript = e.results[0][0].transcript;
-        const input = document.getElementById('user-input');
-        input.value = (input.value ? input.value + ' ' : '') + transcript;
-        autoResizeTextarea(input);
-      };
-      rec.onend = () => btn.classList.remove('bg-rose-600');
-      rec.start();
+      const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+      if (!SR) { alert('Dictado no soportado en este navegador.'); return; }
+      const r = new SR(); r.lang = 'es-MX';
+      r.onresult = (e) => { const inp = document.getElementById('user-input'); inp.value += (inp.value ? ' ' : '') + e.results[0][0].transcript; autoResizeTextarea(inp); };
+      r.start();
     }
 
-    // ==========================================
-    // 8. CONFIGURACIÓN Y RESPALDO / SYNC
-    // ==========================================
-    function toggleDrawer(id) {
-      document.getElementById(id).classList.toggle('hidden');
-    }
-
-    function openSettings(subtab = 'general') {
+    function openSettings(tab) {
       document.getElementById('cfg-api-key').value = state.apiKey;
-      document.getElementById('cfg-approach').value = state.approach;
-      document.getElementById('cfg-confrontation').value = state.confrontation;
-      document.getElementById('cfg-conf-val').textContent = `${state.confrontation} / 5`;
-      switchSettingsTab(subtab);
+      switchSettingsTab(tab);
       document.getElementById('settings-modal').classList.remove('hidden');
     }
-
-    function closeSettings() {
-      document.getElementById('settings-modal').classList.add('hidden');
+    function closeSettings() { document.getElementById('settings-modal').classList.add('hidden'); }
+    function switchSettingsTab(t) {
+      document.getElementById('settings-pane-general').classList.toggle('hidden', t !== 'general');
+      document.getElementById('settings-pane-sync').classList.toggle('hidden', t !== 'sync');
+      document.getElementById('stab-general').className = t === 'general' ? 'px-3 py-1 rounded-lg bg-indigo-600 text-white text-xs font-semibold' : 'px-3 py-1 rounded-lg bg-white/10 text-slate-300 text-xs font-semibold';
+      document.getElementById('stab-sync').className = t === 'sync' ? 'px-3 py-1 rounded-lg bg-indigo-600 text-white text-xs font-semibold' : 'px-3 py-1 rounded-lg bg-white/10 text-slate-300 text-xs font-semibold';
     }
-
-    function switchSettingsTab(tab) {
-      document.getElementById('settings-pane-general').classList.toggle('hidden', tab !== 'general');
-      document.getElementById('settings-pane-sync').classList.toggle('hidden', tab !== 'sync');
-      document.getElementById('stab-general').className = tab === 'general'
-        ? 'px-3 py-1 rounded-lg bg-indigo-600 text-white text-xs font-semibold'
-        : 'px-3 py-1 rounded-lg bg-white/10 text-slate-300 text-xs font-semibold';
-      document.getElementById('stab-sync').className = tab === 'sync'
-        ? 'px-3 py-1 rounded-lg bg-indigo-600 text-white text-xs font-semibold'
-        : 'px-3 py-1 rounded-lg bg-white/10 text-slate-300 text-xs font-semibold';
-    }
-
     function saveGeneralSettings() {
       state.apiKey = document.getElementById('cfg-api-key').value.trim();
-      state.approach = document.getElementById('cfg-approach').value;
-      state.confrontation = parseInt(document.getElementById('cfg-confrontation').value, 10);
       saveState();
-      checkApiWarning();
+      document.getElementById('api-warning-banner').classList.toggle('hidden', Boolean(state.apiKey));
       closeSettings();
     }
-
-    function buildBackupPayload() {
-      const includeKey = document.getElementById('sync-include-key')?.checked ?? true;
-      const copy = structuredClone(state);
-      if (!includeKey) copy.apiKey = '';
-      return copy;
-    }
-
     function exportBackupFile() {
-      const dataStr = JSON.stringify(buildBackupPayload(), null, 2);
-      const blob = new Blob([dataStr], { type: 'application/json' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `psique-ia-respaldo-${new Date().toISOString().slice(0, 10)}.json`;
-      a.click();
-      URL.revokeObjectURL(url);
+      const blob = new Blob([JSON.stringify(state)], { type: 'application/json' });
+      const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'psique-ia-respaldo.json'; a.click();
     }
-
-    function importBackupFile(event) {
-      const file = event.target.files[0];
-      if (!file) return;
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        try {
-          const imported = JSON.parse(e.target.result);
-          state = { ...structuredClone(DEFAULT_STATE), ...imported };
-          saveState();
-          initApp();
-          closeSettings();
-          alert('✅ Respaldo cargado correctamente.');
-        } catch {
-          alert('❌ El archivo no tiene un formato válido.');
-        }
-      };
-      reader.readAsText(file);
+    function importBackupFile(e) {
+      const f = e.target.files[0]; if (!f) return;
+      const r = new FileReader();
+      r.onload = (ev) => { state = { ...structuredClone(DEFAULT_STATE), ...JSON.parse(ev.target.result) }; saveState(); init(); closeSettings(); alert('✅ Respaldo cargado'); };
+      r.readAsText(f);
     }
-
     async function copyBackupCode() {
-      const encoded = 'PSIQUE_BACKUP_' + btoa(unescape(encodeURIComponent(JSON.stringify(buildBackupPayload()))));
-      await navigator.clipboard.writeText(encoded);
-      alert('📋 Código copiado. Pégalo en tu chat de WhatsApp o Telegram para abrirlo en otro dispositivo.');
+      await navigator.clipboard.writeText('PSIQUE_BACKUP_' + btoa(unescape(encodeURIComponent(JSON.stringify(state)))));
+      alert('📋 Código copiado para WhatsApp.');
     }
-
     function restoreFromBackupCode() {
       const raw = document.getElementById('paste-backup-code').value.trim();
-      if (!raw.startsWith('PSIQUE_BACKUP_')) {
-        alert('❌ Código inválido. Asegúrate de copiarlo completo.');
-        return;
-      }
-      try {
-        const jsonStr = decodeURIComponent(escape(atob(raw.replace('PSIQUE_BACKUP_', ''))));
-        const imported = JSON.parse(jsonStr);
-        state = { ...structuredClone(DEFAULT_STATE), ...imported };
-        saveState();
-        initApp();
-        closeSettings();
-        alert('✅ Progreso restaurado exitosamente.');
-      } catch {
-        alert('❌ Error al decodificar el respaldo.');
-      }
+      if (!raw.startsWith('PSIQUE_BACKUP_')) return;
+      state = { ...structuredClone(DEFAULT_STATE), ...JSON.parse(decodeURIComponent(escape(atob(raw.replace('PSIQUE_BACKUP_', ''))))) };
+      saveState(); init(); closeSettings(); alert('✅ Restaurado.');
     }
 
-    function checkApiWarning() {
+    function escapeHtml(s) { return String(s).replace(/[&<>"']/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[m])); }
+
+    function init() {
+      adjustAppHeight();
+      renderTopics();
+      renderMoodPills();
+      renderChat();
       document.getElementById('api-warning-banner').classList.toggle('hidden', Boolean(state.apiKey));
     }
-
-    function escapeHtml(str) {
-      return String(str).replace(/[&<>"']/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[m]));
-    }
-
-    function initApp() {
-      syncViewportHeight();
-      renderTopicsSelect();
-      renderChatMessages();
-      checkApiWarning();
-      syncEnvUI();
-    }
-
-    initApp();
+    init();
   </script>
 </body>
 </html>

@@ -1,4 +1,4 @@
-const CACHE_NAME = 'psique-ia-v1';
+const CACHE_NAME = 'psique-ia-v3';
 
 self.addEventListener('install', (event) => {
   self.skipWaiting();
